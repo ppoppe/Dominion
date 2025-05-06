@@ -1,4 +1,4 @@
-package org.poppe.dominion;
+package org.poppe.dominion.core;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,8 +28,8 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
                 throw new IllegalArgumentException("Number of players must be between 2 and 6.");
             }
             // Build all the cards you have to have to play a game
-            Card.Type x = Card.Type.COPPER;
-            this.stacks.put(x, cb.makeCards(x, treasure_size));
+            Card.Type x = Card.Type.COPPER;// need extra coppers for building starting hands later
+            this.stacks.put(x, cb.makeCards(x, treasure_size + numPlayers * 7));
             x = Card.Type.SILVER;
             this.stacks.put(x, cb.makeCards(x, treasure_size));
             x = Card.Type.GOLD;
@@ -52,8 +52,9 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
                 numCards = numVP(this.numPlayers);
             }
             // -1 because already have one to add to the stack
-            var cs = CardBuilder.getInstance().makeCards(type, numCards -1);
-            cs.AddToBottom(card);
+            var cs = CardBuilder.getInstance().makeCards(type, numCards - 1);
+            // Stick that first card we made on the bottom of the stack
+            cs.addFirst(card);
             this.stacks.put(type, cs);
             return this; // returns Builder instance so we can chain calls of them together
         }

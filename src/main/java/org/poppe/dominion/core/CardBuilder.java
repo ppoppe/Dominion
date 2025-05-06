@@ -1,4 +1,4 @@
-package org.poppe.dominion;
+package org.poppe.dominion.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,7 +55,7 @@ public class CardBuilder {
     public CardStack makeCards(Card.Type type, int num){
         CardStack cards = new CardStack();
         for (int i = 0; i < num; i++) {
-            cards.AddToTop(makeCard(type));
+            cards.addLast(makeCard(type));
         }
         return cards;
     }

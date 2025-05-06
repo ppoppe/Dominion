@@ -1,4 +1,4 @@
-package org.poppe.dominion;
+package org.poppe.dominion.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
