@@ -30,7 +30,7 @@ public class Tableau {
 
     protected Optional<Card> pullCard(Card.Name name) {
         if (hasCardPile(name) && numLeft(name) > 0) {
-            Optional.of(supplyPiles.get(name).draw());
+            return Optional.of(supplyPiles.get(name).draw());
         }
         return Optional.empty();
     }

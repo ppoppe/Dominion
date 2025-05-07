@@ -3,7 +3,7 @@ package org.poppe.dominion.strategies;
 import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
-import org.poppe.dominion.core.GameEngine;
+import org.poppe.dominion.core.Player;
 import org.poppe.dominion.core.Tableau;
 
 /**
@@ -11,18 +11,20 @@ import org.poppe.dominion.core.Tableau;
  * @author poppe
  */
 public class BigMoney extends Strategy {
-    public BigMoney() {
+    public BigMoney(Player player) {
+        super(player);
+        name = "Big Money";
     }
 
     @Override
-    public Optional<Integer> pickAnActionCard(GameEngine engine) {
+    public Optional<Integer> pickAnActionCard() {
         // We aren't going to own any action cards, so there's no need to ever specify
         // one to play
-        return Optional.of(-1);
+        return Optional.empty();
     }
 
     @Override
-    public Optional<Integer> pickATreasureCard(GameEngine engine) {
+    public Optional<Integer> pickATreasureCard() {
         // We will play down every treasure card we have
         for (int i = 0; i< player.handSize(); i++)
         {

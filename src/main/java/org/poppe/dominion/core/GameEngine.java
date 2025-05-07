@@ -2,8 +2,6 @@ package org.poppe.dominion.core;
 
 import java.util.HashMap;
 
-import org.poppe.dominion.strategies.BigMoney;
-
 /**
  *
  * @author poppe
@@ -12,7 +10,7 @@ public class GameEngine {
     private HashMap<Integer, Player> players;
     public Tableau tableau;
 
-    public GameEngine() {
+    public GameEngine(HashMap<Integer, Player> players) {
         // Build the tableau before we do anything else
         tableau = new Tableau.Builder(2)
                 .withCard(Card.Name.SMITHY)
@@ -20,23 +18,18 @@ public class GameEngine {
                 .withCard(Card.Name.WITCH)
                 .build();
 
-        players = new HashMap<>();
-        // For now, just make a couple players
-        Player p1 = new Player(this, 0, "Player 1", initializeHand());
-        BigMoney strategy1 = new BigMoney();
-        p1.initialize(strategy1);
-        players.put(p1.id, p1);
-        Player p2 = new Player(this, 1, "Player 2", initializeHand());
-        BigMoney strategy2 = new BigMoney();
-        p2.initialize(strategy2);
-        players.put(p2.id, p2);
+        this.players = new HashMap<>(players);
 
-        // Before the game officially starts, tell all the players to CleanUp so they
+        // Before the game officially starts, give all the players a starting deck,
+        // then tell all the players to CleanUp so they
         // draw a starting hand
         players.forEach((_, player) -> {
+            player.deck.gain(initializeHand());
             player.doCleanup();
         });
+    }
 
+    public void playGame(){
         // For now, just end games when PROVINCE pile is done.
         while (tableau.numLeft(Card.Name.PROVINCE) > 0) {
             // Iterate through players and let each take their turn
@@ -44,6 +37,10 @@ public class GameEngine {
                 takeTurn(player);
             });
         }
+        // Now that game is over, score each player
+        players.forEach((_, player) -> {
+            score(player);
+        });
     }
 
     // Draw requisite copper and estate cards from Tableau to feed to player
@@ -92,6 +89,8 @@ public class GameEngine {
             }
             // Now go and do the card
             executeCard(player, card.get());
+            // Ask the player for another treasure
+            card = player.playTreasureCard();
         }
         // Done laying down treasure now, let the player execute some buys
         while (player.state.currentBuys > 0) {
@@ -164,5 +163,26 @@ public class GameEngine {
 
         }
 
+    }
+
+    private void score(Player player) {
+        // We'll eventually need to know how to score more complicated cards, but for
+        // now, just assume
+        // face value VP is all we are dealing with
+        int vp = 0;
+        // Player will have a deck/hand/discard at this point of the game
+        // TODO: Might eventually also have stuff on islands/duration/etc
+        vp += score(player.deck);
+        vp += score(player.hand);
+        vp += score(player.discardPile);
+        player.state.finalVP = vp;
+    }
+
+    private int score(CardStack stack) {
+        int vp = 0;
+        while (stack.numLeft() > 0) {
+            vp += stack.draw().getExtraVP();
+        }
+        return vp;
     }
 }

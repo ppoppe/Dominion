@@ -14,6 +14,8 @@ public class Player {
         protected int currentActions;
         protected int currentBuys;
         protected int currentMoney;
+        // Placeholder for GameEngine to eventually store our score in
+        protected int finalVP = 0;
 
         public PlayerState() {
             this.reset();
@@ -40,7 +42,6 @@ public class Player {
 
     public final int id;
     public final String name;
-    public final GameEngine engine;
     protected final CardStack deck;
     protected final CardStack hand;
 
@@ -58,28 +59,20 @@ public class Player {
 
     protected final CardStack playArea;
     protected final CardStack discardPile;
-    protected final Strategy strategy = null;
+    protected Strategy strategy = null;
 
-    protected Player(GameEngine engine, int id, String name, CardStack startingCards) {
-        this.engine = engine;
+    protected Player(int id, String name) {
         this.id = id;
         this.name = name;
         this.deck = new CardStack();
-        while (startingCards.numLeft() > 0) {
-            this.deck.gain(startingCards.draw());
-        }
         this.hand = new CardStack();
         this.playArea = new CardStack();
         this.discardPile = new CardStack();
         this.state = new PlayerState();
     }
 
-    protected void initialize(Strategy strategy) {
-        // Give the strategy a reference to me so it can access my functions to get at
-        // the stacks
-        this.strategy.setPlayer(this);
-        // Call cleanup to get hand ready to go
-        doCleanup();
+    protected void setStrategy(Strategy strategy) {
+        this.strategy = strategy;
     }
 
     protected void drawToHand() {
@@ -94,7 +87,7 @@ public class Player {
 
     protected Optional<Card> playActionCard() {
         // Tell Strategy to do its thing
-        var cardIdx = strategy.pickAnActionCard(this.engine);
+        var cardIdx = strategy.pickAnActionCard();
         // If the strategy identified a card to play, return that, else return no card
         if (cardIdx.isPresent()) {
             return Optional.of(hand.pullCard(cardIdx.get()));
@@ -105,7 +98,7 @@ public class Player {
 
     protected Optional<Card> playTreasureCard() {
         // Tell Strategy to do its thing
-        var cardIdx = strategy.pickATreasureCard(this.engine);
+        var cardIdx = strategy.pickATreasureCard();
         // If the strategy identified a card to play, return that, else return no card
         if (cardIdx.isPresent()) {
             return Optional.of(hand.pullCard(cardIdx.get()));

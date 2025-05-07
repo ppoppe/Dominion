@@ -12,7 +12,9 @@ import java.util.LinkedList;
 // "first" to be the bottom
 public class CardStack {
     protected LinkedList<Card> stack;
+
     public CardStack() {
+        stack = new LinkedList<>();
     }
 
     // Alias for removeLast, i.e. from the top
@@ -24,24 +26,24 @@ public class CardStack {
     final protected void gain(Card card) {
         stack.addLast(card);
     }
-    /** Alias for addFirst, i.e. on bottom of stack */ 
+
+    /** Alias for addFirst, i.e. on bottom of stack */
     final protected void gainToBottom(Card card) {
         stack.addFirst(card);
     }
+
     // Alias for addLast, i.e. on to top
     final protected void gain(CardStack stack) {
-        while (stack.numLeft() > 0)
-        {
+        while (stack.numLeft() > 0) {
             this.gain(stack.draw());
         }
     }
 
-    final protected Card peek()
-    {
+    final protected Card peek() {
         return stack.peek();
     }
 
-    final protected int numLeft(){
+    final protected int numLeft() {
         return stack.size();
     }
 
