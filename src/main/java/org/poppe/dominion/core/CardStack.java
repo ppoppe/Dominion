@@ -16,20 +16,20 @@ public class CardStack extends LinkedList<Card> {
     }
 
     // Alias for removeLast, i.e. from the top
-    final public Card draw() {
+    final protected Card draw() {
         return this.removeLast();
     }
 
     // Alias for addLast, i.e. on to top
-    final public void gain(Card card) {
+    final protected void gain(Card card) {
         this.addLast(card);
     }
 
-    final public void shuffle() {
+    final protected void shuffle() {
         Collections.shuffle(this);
     }
 
-    final public Card PullCard(int index) {
+    final protected Card pullCard(int index) {
         if (index < 0 && index >= this.size()) {
             // That index is not in range for this stack
             throw new IllegalStateException("Index is out of range for this CardStack");
@@ -39,7 +39,7 @@ public class CardStack extends LinkedList<Card> {
     }
 
     // How many of a given type exist in this card stack
-    final public int GetCount(Card.Type type) {
+    final public int getCount(Card.Type type) {
         int count = 0;
         for (var card : this) {
             if (card.getType() == type) {
@@ -51,7 +51,7 @@ public class CardStack extends LinkedList<Card> {
 
     // Total treasure value of all cards in the stack (only really considers simple
     // cards like Copper/Silver/etc)
-    final public int GetTotalTreasure() {
+    final public int getTotalTreasure() {
         int totalTreasure = 0;
         for (var card : this) {
             totalTreasure += card.getExtraTreasure();

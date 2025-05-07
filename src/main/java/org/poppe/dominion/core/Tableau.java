@@ -1,5 +1,6 @@
 package org.poppe.dominion.core;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
         private final int treasure_size = 100;
         private final int numPlayers;
         // Mandatory
-        private Map<Card.Type, CardStack> stacks = new HashMap<>();
+        private HashMap<Card.Type, CardStack> stacks = new HashMap<>();
         // Optional
 
         public Builder(int numPlayers) {
@@ -48,7 +49,7 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
         {
             int numCards = 10;
             var card = CardBuilder.getInstance().makeCard(type);
-            if (card.getCategory().contains(Card.Category.TREASURE)){
+            if (card.getCategories().contains(Card.Category.TREASURE)){
                 numCards = numVP(this.numPlayers);
             }
             // -1 because already have one to add to the stack
@@ -91,5 +92,4 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
             return (numPlayers - 1)*10;
         }
     }
-
 }

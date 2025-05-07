@@ -62,7 +62,7 @@ public final class Card {
         return type;
     }
 
-    public List<Category> getCategory() {
+    public List<Category> getCategories() {
         return Collections.unmodifiableList(category);
     }
 
