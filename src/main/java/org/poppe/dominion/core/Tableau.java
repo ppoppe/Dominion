@@ -1,8 +1,7 @@
 package org.poppe.dominion.core;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 /**
  *
@@ -10,17 +9,48 @@ import java.util.Map;
  */
 
 // Tableau is a fancy HashMap of CardStacks, arranged by Type
-public class Tableau extends HashMap<Card.Type, CardStack> {
+public class Tableau {
+    private HashMap<Card.Name, CardStack> supplyPiles;
+
     private Tableau(Builder builder) {
-        super(builder.stacks);
+        supplyPiles = builder.supplyPiles;
+    }
+
+    public boolean hasCardPile(Card.Name name) {
+        return supplyPiles.containsKey(name);
+    }
+
+    public int numLeft(Card.Name name) {
+        if (hasCardPile(name)) {
+            return supplyPiles.get(name).numLeft();
+        } else {
+            return 0;
+        }
+    }
+
+    protected Optional<Card> pullCard(Card.Name name) {
+        if (hasCardPile(name) && numLeft(name) > 0) {
+            Optional.of(supplyPiles.get(name).draw());
+        }
+        return Optional.empty();
+    }
+
+    /** Getter method to grab a particular stack of cards, mostly for the GameEngine to use */
+    protected CardStack getStack(Card.Name name) {
+        if (!hasCardPile(name)) {
+            throw new IllegalStateException(
+                    String.format("Someone asked to get the stack of %s cards, but that doesn't exist",
+                            name.toString()));
+        }
+        return supplyPiles.get(name);
     }
 
     public static class Builder {
-        private final int treasure_size = 100;
+        private final int treasurePileSize = 100;
         private final int numPlayers;
         // Mandatory
-        private HashMap<Card.Type, CardStack> stacks = new HashMap<>();
-        // Optional
+        private HashMap<Card.Name, CardStack> supplyPiles = new HashMap<>();
+        // Optionals
 
         public Builder(int numPlayers) {
             this.numPlayers = numPlayers;
@@ -29,34 +59,38 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
                 throw new IllegalArgumentException("Number of players must be between 2 and 6.");
             }
             // Build all the cards you have to have to play a game
-            Card.Type x = Card.Type.COPPER;// need extra coppers for building starting hands later
-            this.stacks.put(x, cb.makeCards(x, treasure_size + numPlayers * 7));
-            x = Card.Type.SILVER;
-            this.stacks.put(x, cb.makeCards(x, treasure_size));
-            x = Card.Type.GOLD;
-            this.stacks.put(x, cb.makeCards(x, treasure_size));
-            x = Card.Type.ESTATE; // need extra estates for building starting hands later
-            this.stacks.put(x, cb.makeCards(x, numVP(numPlayers) + numPlayers * 3)); 
-            x = Card.Type.DUCHY;
-            this.stacks.put(x, cb.makeCards(x, numVP(numPlayers)));
-            x = Card.Type.PROVINCE;
-            this.stacks.put(x, cb.makeCards(x, numProvinces(numPlayers)));
-            x = Card.Type.CURSE;
-            this.stacks.put(x, cb.makeCards(x, numCurses(numPlayers)));
+            Card.Name x = Card.Name.COPPER;// need extra coppers for building starting hands later
+            this.supplyPiles.put(x, cb.makeCards(x, treasurePileSize + numPlayers * 7));
+            x = Card.Name.SILVER;
+            this.supplyPiles.put(x, cb.makeCards(x, treasurePileSize));
+            x = Card.Name.GOLD;
+            this.supplyPiles.put(x, cb.makeCards(x, treasurePileSize));
+            x = Card.Name.ESTATE; // need extra estates for building starting hands later
+            this.supplyPiles.put(x, cb.makeCards(x, numVP(numPlayers) + numPlayers * 3));
+            x = Card.Name.DUCHY;
+            this.supplyPiles.put(x, cb.makeCards(x, numVP(numPlayers)));
+            x = Card.Name.PROVINCE;
+            this.supplyPiles.put(x, cb.makeCards(x, numProvinces(numPlayers)));
+            x = Card.Name.CURSE;
+            this.supplyPiles.put(x, cb.makeCards(x, numCurses(numPlayers)));
         }
 
-        public Builder withCard(Card.Type type)
-        {
+        public Builder withCard(Card.Name type) {
             int numCards = 10;
             var card = CardBuilder.getInstance().makeCard(type);
-            if (card.getCategories().contains(Card.Category.TREASURE)){
+            var cardTypes = card.getTypes();
+            if (cardTypes.size() == 1 && cardTypes.contains(Card.Type.VICTORY)) {
+                // Pure victory card
                 numCards = numVP(this.numPlayers);
+            } else if (cardTypes.size() == 1 && cardTypes.contains((Card.Type.TREASURE))) {
+                // Pure treasure card
+                numCards = treasurePileSize;
             }
             // -1 because already have one to add to the stack
             var cs = CardBuilder.getInstance().makeCards(type, numCards - 1);
             // Stick that first card we made on the bottom of the stack
-            cs.addFirst(card);
-            this.stacks.put(type, cs);
+            cs.gainToBottom(card);
+            this.supplyPiles.put(type, cs);
             return this; // returns Builder instance so we can chain calls of them together
         }
 
@@ -89,7 +123,7 @@ public class Tableau extends HashMap<Card.Type, CardStack> {
         }
 
         private int numCurses(int numPlayers) {
-            return (numPlayers - 1)*10;
+            return (numPlayers - 1) * 10;
         }
     }
 }

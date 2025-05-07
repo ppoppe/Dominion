@@ -1,12 +1,11 @@
 package org.poppe.dominion.strategies;
 
-import java.util.Map;
 import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
-import org.poppe.dominion.core.CardStack;
 import org.poppe.dominion.core.GameEngine;
 import org.poppe.dominion.core.Player;
+import org.poppe.dominion.core.Tableau;
 
 /**
  *
@@ -30,5 +29,5 @@ public abstract class Strategy {
     
     public abstract Optional<Integer> pickATreasureCard(GameEngine engine);
 
-    public abstract Optional<Card.Type> pickACardToBuy(Map<Card.Type, CardStack> tableau);
+    public abstract Optional<Card.Name> pickACardToBuy(Tableau tableau);
 }

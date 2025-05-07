@@ -10,7 +10,7 @@ import java.util.List;
  */
 public final class Card {
 
-    public enum Type {
+    public enum Name {
         COPPER,
         SILVER,
         GOLD,
@@ -21,11 +21,11 @@ public final class Card {
         COLONY,
         CURSE,
         SMITHY,
-        VILLAGER,
+        VILLAGE,
         WITCH
     }
 
-    public enum Category {
+    public enum Type {
         ACTION,
         ATTACK,
         TREASURE,
@@ -33,9 +33,9 @@ public final class Card {
     }
 
     private final int id;
-    private final Type type;
-    private final ArrayList<Category> category;
-    private final String name;
+    private final Name name;
+    private final ArrayList<Type> types;
+    private final String nameStr;
     private final int cost;
     private final int extraTreasure;
     private final int extraVP;
@@ -45,9 +45,9 @@ public final class Card {
 
     private Card(Builder builder) {
         this.id = builder.id;
-        this.type = builder.type;
-        this.category = builder.category;
         this.name = builder.name;
+        this.types = builder.types;
+        this.nameStr = builder.nameStr;
         this.cost = builder.cost;
         this.extraTreasure = builder.extraTreasure;
         this.extraVP = builder.extraVP;
@@ -58,16 +58,16 @@ public final class Card {
 
     // Getters
 
-    public Type getType() {
-        return type;
-    }
-
-    public List<Category> getCategories() {
-        return Collections.unmodifiableList(category);
-    }
-
-    public String getName() {
+    public Name getName() {
         return name;
+    }
+
+    public List<Type> getTypes() {
+        return Collections.unmodifiableList(types);
+    }
+
+    public String getNameStr() {
+        return nameStr;
     }
 
     public int getCost() {
@@ -98,9 +98,9 @@ public final class Card {
     public static class Builder {
         // Mandatory
         private final int id;
-        private final Type type;
-        private final ArrayList<Category> category;
-        private final String name;
+        private final Name name;
+        private final ArrayList<Type> types;
+        private final String nameStr;
         private final int cost;
 
         // Optional
@@ -110,24 +110,24 @@ public final class Card {
         private int extraActions = 0;
         private int extraBuys = 0;
 
-        public Builder(int id, Type type, List<Category> category, String name, int cost) {
+        public Builder(int id, Name name, List<Type> types, String nameStr, int cost) {
             // Basic validation on fields
-            if (type == null) {
-                throw new IllegalArgumentException("Card Type cannot be null.");
+            if (name == null) {
+                throw new IllegalArgumentException("Card Name cannot be null.");
             }
-            if (category == null || category.isEmpty()) {
+            if (types == null || types.isEmpty()) {
                 throw new IllegalArgumentException("Card Category cannot be null or empty.");
             }
-            if (name == null || name.trim().isEmpty()) {
+            if (nameStr == null || nameStr.trim().isEmpty()) {
                 throw new IllegalArgumentException("Card Name cannot be null or empty.");
             }
             if (cost < 0) {
                 throw new IllegalArgumentException("Card Cost cannot be negative.");
             }
             this.id = id;
-            this.type = type;
-            this.category = new ArrayList<>(category);
             this.name = name;
+            this.types = new ArrayList<>(types);
+            this.nameStr = nameStr;
             this.cost = cost;
         }
 

@@ -21,21 +21,21 @@ public class CardBuilder {
 
     private CardBuilder() {
         // Build the complex card types
-        action_attack.add(Card.Category.ACTION);
-        action_attack.add(Card.Category.ATTACK);
+        action_attack.add(Card.Type.ACTION);
+        action_attack.add(Card.Type.ATTACK);
     };
 
     // Shortcut to make an ArrayList containing Treasure
-    private final ArrayList<Card.Category> treasure = new ArrayList<>(Collections.singletonList(Card.Category.TREASURE));
+    private final ArrayList<Card.Type> treasure = new ArrayList<>(Collections.singletonList(Card.Type.TREASURE));
     // Shortcut to make an ArrayList containing Victory
-    private final ArrayList<Card.Category> victory = new ArrayList<>(Collections.singletonList(Card.Category.VICTORY));
+    private final ArrayList<Card.Type> victory = new ArrayList<>(Collections.singletonList(Card.Type.VICTORY));
     // Shortcut to make an ArrayList containing Action
-    private final ArrayList<Card.Category> action = new ArrayList<>(Collections.singletonList(Card.Category.ACTION));
+    private final ArrayList<Card.Type> action = new ArrayList<>(Collections.singletonList(Card.Type.ACTION));
     // Attack Cards
-    private final ArrayList<Card.Category> action_attack = new ArrayList<>();
+    private final ArrayList<Card.Type> action_attack = new ArrayList<>();
 
     // "Universal" Make variants
-    public Card makeCard(Card.Type type) {
+    public Card makeCard(Card.Name type) {
         cardUniqueId++;
         return switch (type) {
             case COPPER -> makeCopper(cardUniqueId);
@@ -47,79 +47,75 @@ public class CardBuilder {
             case PROVINCE -> makeProvince(cardUniqueId);
             case COLONY -> makeColony(cardUniqueId);
             case SMITHY -> makeSmithy(cardUniqueId);
-            case VILLAGER -> makeVillager(cardUniqueId);
+            case VILLAGE -> makeVillage(cardUniqueId);
             case WITCH -> makeWitch(cardUniqueId);
             default -> null;
         };
     }
-    public CardStack makeCards(Card.Type type, int num){
+
+    public CardStack makeCards(Card.Name type, int num) {
         CardStack cards = new CardStack();
         for (int i = 0; i < num; i++) {
-            cards.addLast(makeCard(type));
+            cards.gain(makeCard(type));
         }
         return cards;
     }
 
-
-
     // Treasure Cards
     private Card makeCopper(int id) {
-        return new Card.Builder(id, Card.Type.COPPER, treasure, "Copper", 0)
+        return new Card.Builder(id, Card.Name.COPPER, treasure, "Copper", 0)
                 .withExtraTreasure(1).build();
     }
 
     private Card makeSilver(int id) {
-        return new Card.Builder(id, Card.Type.SILVER, treasure, "Silver", 3)
+        return new Card.Builder(id, Card.Name.SILVER, treasure, "Silver", 3)
                 .withExtraTreasure(2).build();
     }
 
     private Card makeGold(int id) {
-        return new Card.Builder(id, Card.Type.GOLD, treasure, "Gold", 6)
+        return new Card.Builder(id, Card.Name.GOLD, treasure, "Gold", 6)
                 .withExtraTreasure(3).build();
     }
 
     private Card makePlatinum(int id) {
-        return new Card.Builder(id, Card.Type.PLATINUM, treasure, "Platinum", 9)
+        return new Card.Builder(id, Card.Name.PLATINUM, treasure, "Platinum", 9)
                 .withExtraTreasure(5).build();
     }
 
-
     // VP Cards
     private Card makeEstate(int id) {
-        return new Card.Builder(id, Card.Type.ESTATE, victory, "Estate", 2)
+        return new Card.Builder(id, Card.Name.ESTATE, victory, "Estate", 2)
                 .withExtraVP(1).build();
     }
 
     private Card makeDuchy(int id) {
-        return new Card.Builder(id, Card.Type.DUCHY, victory, "Duchy", 5)
+        return new Card.Builder(id, Card.Name.DUCHY, victory, "Duchy", 5)
                 .withExtraVP(3).build();
     }
 
     private Card makeProvince(int id) {
-        return new Card.Builder(id, Card.Type.PROVINCE, victory, "Province", 8)
+        return new Card.Builder(id, Card.Name.PROVINCE, victory, "Province", 8)
                 .withExtraVP(6).build();
     }
 
     private Card makeColony(int id) {
-        return new Card.Builder(id, Card.Type.COLONY, victory, "Colony", 11)
+        return new Card.Builder(id, Card.Name.COLONY, victory, "Colony", 11)
                 .withExtraVP(10).build();
     }
 
-
     // Action Cards
     private Card makeSmithy(int id) {
-        return new Card.Builder(id, Card.Type.SMITHY, action, "Smithy", 4)
+        return new Card.Builder(id, Card.Name.SMITHY, action, "Smithy", 4)
                 .withExtraCards(3).build();
     }
 
-    private Card makeVillager(int id) {
-        return new Card.Builder(id, Card.Type.VILLAGER, action, "Villager", 2)
+    private Card makeVillage(int id) {
+        return new Card.Builder(id, Card.Name.VILLAGE, action, "Village", 2)
                 .withExtraActions(2).withExtraCards(1).build();
     }
 
-
     private Card makeWitch(int id) {
-        return new Card.Builder(id, Card.Type.WITCH, action_attack, "Witch", 5)
+        return new Card.Builder(id, Card.Name.WITCH, action_attack, "Witch", 5)
                 .withExtraCards(2).build();
     }
 }

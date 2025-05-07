@@ -1,8 +1,6 @@
 package org.poppe.dominion.core;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.poppe.dominion.strategies.BigMoney;
 
@@ -15,6 +13,13 @@ public class GameEngine {
     public Tableau tableau;
 
     public GameEngine() {
+        // Build the tableau before we do anything else
+        tableau = new Tableau.Builder(2)
+                .withCard(Card.Name.SMITHY)
+                .withCard(Card.Name.VILLAGE)
+                .withCard(Card.Name.WITCH)
+                .build();
+
         players = new HashMap<>();
         // For now, just make a couple players
         Player p1 = new Player(this, 0, "Player 1", initializeHand());
@@ -33,16 +38,12 @@ public class GameEngine {
         });
 
         // For now, just end games when PROVINCE pile is done.
-        while (tableau.get(Card.Type.PROVINCE).size() > 0) {
+        while (tableau.numLeft(Card.Name.PROVINCE) > 0) {
             // Iterate through players and let each take their turn
             players.forEach((_, player) -> {
                 takeTurn(player);
             });
         }
-    }
-
-    public Map<Card.Type, CardStack> getTableau() {
-        return Collections.unmodifiableMap(tableau);
     }
 
     // Draw requisite copper and estate cards from Tableau to feed to player
@@ -51,10 +52,10 @@ public class GameEngine {
     private CardStack initializeHand() {
         CardStack cs = new CardStack();
         for (int i = 0; i < 7; i++) {
-            cs.gain(tableau.get(Card.Type.COPPER).draw());
+            cs.gain(tableau.pullCard(Card.Name.COPPER).get());
         }
         for (int i = 0; i < 3; i++) {
-            cs.gain(tableau.get(Card.Type.ESTATE).draw());
+            cs.gain(tableau.pullCard(Card.Name.ESTATE).get());
         }
         return cs;
     }
@@ -65,10 +66,10 @@ public class GameEngine {
             // Ask the player for a card to play
             var card = player.playActionCard();
             if (card.isPresent()) {
-                if (!card.get().getCategories().contains(Card.Category.ACTION)) {
+                if (!card.get().getTypes().contains(Card.Type.ACTION)) {
                     throw new IllegalStateException(String.format(
                             "Player %d was asked for an action card and returned %s, which is not an action card",
-                            player.id, card.get().getType().toString()));
+                            player.id, card.get().getName().toString()));
                 }
                 // First thing to do is note that the player has executed an action card and
                 // thus has one less action
@@ -84,10 +85,10 @@ public class GameEngine {
         // order",
         var card = player.playTreasureCard();
         while (card.isPresent()) {
-            if (!card.get().getCategories().contains(Card.Category.TREASURE)) {
+            if (!card.get().getTypes().contains(Card.Type.TREASURE)) {
                 throw new IllegalStateException(String.format(
                         "Player %d was asked for an treasure card and returned %s, which is not a treasure card",
-                        player.id, card.get().getType().toString()));
+                        player.id, card.get().getName().toString()));
             }
             // Now go and do the card
             executeCard(player, card.get());
@@ -95,25 +96,27 @@ public class GameEngine {
         // Done laying down treasure now, let the player execute some buys
         while (player.state.currentBuys > 0) {
             // Pass the player a view into the current tableau
-            var cardType = player.buyCard(tableau);
-            if (cardType.isPresent()) {
+            var cardName = player.buyCard(tableau);
+            if (cardName.isPresent()) {
+                var name = cardName.get();
                 // Double check the player can afford this, or else he's cheating!
-                var tableauStack = tableau.get(cardType.get());
-                if (tableauStack.size() == 0) {
+                if (tableau.numLeft(name) == 0) {
                     throw new IllegalStateException(String.format(
                             "Player %d asked to buy %s, but that pile is empty",
-                            player.id, cardType.get().toString()));
+                            player.id, name.toString()));
                 }
-                int cost = tableauStack.peek().getCost();
+                // Look at the top card of that pile so we can see how much it costs
+                int cost = tableau.getStack(name).peek().getCost();
                 if (cost > player.state.currentMoney) {
                     throw new IllegalStateException(String.format(
                             "Player %d asked to buy %s, but lacks funds to do so (has %d, but card costs %d)",
-                            player.id, cardType.get().toString(), player.state.currentMoney, cost));
+                            player.id, name.toString(), player.state.currentMoney, cost));
                 }
                 // Okeyday then, let's mechanize that purchase
-                Card purchasedCard = tableauStack.draw();
+                var purchasedCard = tableau.pullCard(name).get(); // returns optional, but we know it'll be there
                 player.state.currentMoney -= purchasedCard.getCost();
                 --player.state.currentBuys;
+                player.discardPile.gain(purchasedCard);
             }
         }
         // Cleanup time!
@@ -123,48 +126,33 @@ public class GameEngine {
     private void executeCard(Player player, Card card) {
         // Handle all the "easy" cards here, and then call other helpers to deal with
         // thornier cards
-        switch (card.getType()) {
-            case COLONY:
+        switch (card.getName()) {
+            case CURSE, ESTATE, COLONY, PROVINCE, DUCHY:
                 break;
-            case COPPER:
-                player.state.currentMoney += 1;
-                break;
-            case CURSE:
-                break;
-            case DUCHY:
-                break;
-            case ESTATE:
-                break;
-            case GOLD:
-                player.state.currentMoney += 3;
-                break;
-            case PLATINUM:
-                player.state.currentMoney += 5;
-                break;
-            case PROVINCE:
-                break;
-            case SILVER:
-                player.state.currentMoney += 2;
+            case COPPER, SILVER, GOLD, PLATINUM:
+                player.state.currentMoney += card.getExtraTreasure();
                 break;
             case SMITHY:
                 // Tell the player to draw 4 more cards
-                player.drawToHand(4);
+                player.drawToHand(card.getExtraCards());
                 break;
-            case VILLAGER:
+            case VILLAGE:
                 // Draw a card, add two actions
-                player.drawToHand(1);
-                ++player.state.currentActions;
-                ++player.state.currentActions;
+                player.drawToHand(card.getExtraCards());
+                player.state.currentActions += card.getExtraActions();
                 break;
             case WITCH:
-                // all players but this one have to draw a curse, in player order (in case we run out)
+                // Draw two cards
+                player.drawToHand(card.getExtraCards());
+                // all players but this one have to draw a curse, in player order (in case we
+                // run out)
                 int nextPlayerId = player.id + 1;
                 if (nextPlayerId >= players.size()) {
                     nextPlayerId = 0;
                 }
-                var curseStack = tableau.get(Card.Type.CURSE);
-                while (nextPlayerId != player.id && curseStack.size() > 0) {
-                    players.get(nextPlayerId).deck.gain(curseStack.draw());
+                while (nextPlayerId != player.id && tableau.numLeft(Card.Name.CURSE) > 0) {
+                    // pullCard will return an Optional, but we verified it exists above so we're ok
+                    players.get(nextPlayerId).deck.gain(tableau.pullCard(Card.Name.CURSE).get());
                     ++nextPlayerId;
                     if (nextPlayerId >= players.size()) {
                         nextPlayerId = 0;
