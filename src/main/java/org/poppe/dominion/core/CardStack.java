@@ -39,8 +39,8 @@ public class CardStack {
         }
     }
 
-    final protected Card peek() {
-        return stack.peek();
+    final protected Card examine(int index) {
+        return stack.get(index);
     }
 
     final protected int numLeft() {

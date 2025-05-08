@@ -43,6 +43,7 @@ public class CardBuilder {
             case GOLD -> makeGold(cardUniqueId);
             case PLATINUM -> makePlatinum(cardUniqueId);
             case ESTATE -> makeEstate(cardUniqueId);
+            case CURSE -> makeCurse(cardUniqueId);
             case DUCHY -> makeDuchy(cardUniqueId);
             case PROVINCE -> makeProvince(cardUniqueId);
             case COLONY -> makeColony(cardUniqueId);
@@ -83,6 +84,11 @@ public class CardBuilder {
     }
 
     // VP Cards
+    private Card makeCurse(int id) {
+        return new Card.Builder(id, Card.Name.CURSE, victory, "Curse", 0)
+                .withExtraVP(-1).build();
+    }
+
     private Card makeEstate(int id) {
         return new Card.Builder(id, Card.Name.ESTATE, victory, "Estate", 2)
                 .withExtraVP(1).build();

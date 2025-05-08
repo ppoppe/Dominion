@@ -11,14 +11,13 @@ import org.poppe.dominion.strategies.Strategy;
  */
 public class Player {
     public class PlayerState {
-        protected int currentActions;
-        protected int currentBuys;
-        protected int currentMoney;
+        protected int currentActions = 1;
+        protected int currentBuys = 1;
+        protected int currentMoney = 0;
         // Placeholder for GameEngine to eventually store our score in
         protected int finalVP = 0;
 
         public PlayerState() {
-            this.reset();
         }
 
         public PlayerState(int currentActions, int currentBuys, int currentMoney) {
@@ -29,7 +28,7 @@ public class Player {
 
         protected void reset() {
             currentActions = 1;
-            currentBuys = 0;
+            currentBuys = 1;
             currentMoney = 0;
         }
     }
@@ -41,7 +40,7 @@ public class Player {
     }
 
     public final int id;
-    public final String name;
+    public String name = "";
     protected final CardStack deck;
     protected final CardStack hand;
 
@@ -49,21 +48,37 @@ public class Player {
         return hand.numLeft();
     }
 
+    public Optional<Integer> selectCard(Card.Name name){
+        for (int i=0; i<handSize(); ++i){
+            if (hand.examine(i).getName() == name){
+                return Optional.of(i);
+            }
+        }
+        return Optional.empty();
+    }
+    public Optional<Integer> selectCard(Card.Type type){
+        for (int i=0; i<handSize(); ++i){
+            if (hand.examine(i).getTypes().contains(type)){
+                return Optional.of(i);
+            }
+        }
+        return Optional.empty();
+    }
+
     public Card.Name getCardInHandName(int index) {
-        return hand.pullCard(index).getName();
+        return hand.examine(index).getName();
     }
 
     public List<Card.Type> getCardInHandType(int index) {
-        return hand.pullCard(index).getTypes();
+        return hand.examine(index).getTypes();
     }
 
     protected final CardStack playArea;
     protected final CardStack discardPile;
     protected Strategy strategy = null;
 
-    protected Player(int id, String name) {
+    protected Player(int id) {
         this.id = id;
-        this.name = name;
         this.deck = new CardStack();
         this.hand = new CardStack();
         this.playArea = new CardStack();
@@ -73,6 +88,7 @@ public class Player {
 
     protected void setStrategy(Strategy strategy) {
         this.strategy = strategy;
+        this.name = String.format("%s_%d",strategy.name,this.id);
     }
 
     protected void drawToHand() {

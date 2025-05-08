@@ -1,44 +1,57 @@
 package org.poppe.dominion.core;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import static org.poppe.dominion.core.Dominion.DO_PRINTING;
 
 /**
  *
  * @author poppe
  */
 public class GameEngine {
-    private HashMap<Integer, Player> players;
+
+    private final ArrayList<Player> players;
+    private int turn = 0;
     public Tableau tableau;
 
-    public GameEngine(HashMap<Integer, Player> players) {
+    public GameEngine(ArrayList<Player> players) {
         // Build the tableau before we do anything else
-        tableau = new Tableau.Builder(2)
+        tableau = new Tableau.Builder(players.size())
                 .withCard(Card.Name.SMITHY)
                 .withCard(Card.Name.VILLAGE)
                 .withCard(Card.Name.WITCH)
                 .build();
 
-        this.players = new HashMap<>(players);
+        this.players = new ArrayList<>(players);
 
         // Before the game officially starts, give all the players a starting deck,
         // then tell all the players to CleanUp so they
         // draw a starting hand
-        players.forEach((_, player) -> {
+        players.forEach((player) -> {
             player.deck.gain(initializeHand());
             player.doCleanup();
         });
     }
 
-    public void playGame(){
+    public void playGame() {
         // For now, just end games when PROVINCE pile is done.
-        while (tableau.numLeft(Card.Name.PROVINCE) > 0) {
+        boolean keepGoing = true;
+        while (keepGoing) {
+            ++turn;
+            if (DO_PRINTING) {
+                System.out.println(String.format("Turn %d:", turn));
+            }
             // Iterate through players and let each take their turn
-            players.forEach((_, player) -> {
+            for (var player : players) {
                 takeTurn(player);
-            });
+                if (tableau.numLeft(Card.Name.PROVINCE) < 1){
+                    keepGoing = false;
+                    break;
+                }
+            }
         }
         // Now that game is over, score each player
-        players.forEach((_, player) -> {
+        players.forEach((player) -> {
             score(player);
         });
     }
@@ -71,6 +84,9 @@ public class GameEngine {
                 // First thing to do is note that the player has executed an action card and
                 // thus has one less action
                 --player.state.currentActions;
+                if (DO_PRINTING) {
+                    System.out.println(String.format("  %s plays a %s", player.name, card.get().getName().toString()));
+                }
                 // Now go and do the card
                 executeCard(player, card.get());
             }
@@ -93,29 +109,38 @@ public class GameEngine {
             card = player.playTreasureCard();
         }
         // Done laying down treasure now, let the player execute some buys
+        if (DO_PRINTING) {
+            System.out.println(String.format("  %s has %d money", player.name, player.state.currentMoney));
+        }
         while (player.state.currentBuys > 0) {
             // Pass the player a view into the current tableau
             var cardName = player.buyCard(tableau);
             if (cardName.isPresent()) {
                 var name = cardName.get();
                 // Double check the player can afford this, or else he's cheating!
-                if (tableau.numLeft(name) == 0) {
+                if (tableau.numLeft(name) < 1) {
                     throw new IllegalStateException(String.format(
                             "Player %d asked to buy %s, but that pile is empty",
                             player.id, name.toString()));
                 }
-                // Look at the top card of that pile so we can see how much it costs
-                int cost = tableau.getStack(name).peek().getCost();
+                // Look at a card in the pile so we can see how much it costs
+                int cost = tableau.getStack(name).examine(0).getCost();
                 if (cost > player.state.currentMoney) {
                     throw new IllegalStateException(String.format(
                             "Player %d asked to buy %s, but lacks funds to do so (has %d, but card costs %d)",
                             player.id, name.toString(), player.state.currentMoney, cost));
                 }
                 // Okeyday then, let's mechanize that purchase
+                if (DO_PRINTING) {
+                    System.out.println(String.format("   %s buys a %s", player.name, cardName.get().toString()));
+                }
                 var purchasedCard = tableau.pullCard(name).get(); // returns optional, but we know it'll be there
                 player.state.currentMoney -= purchasedCard.getCost();
                 --player.state.currentBuys;
                 player.discardPile.gain(purchasedCard);
+            } else {
+                // Doesn't want to buy anything
+                break;
             }
         }
         // Cleanup time!
@@ -125,22 +150,27 @@ public class GameEngine {
     private void executeCard(Player player, Card card) {
         // Handle all the "easy" cards here, and then call other helpers to deal with
         // thornier cards
+
+        // Lay the card down
+        // TODO Will eventually need to steer cards to other areas if they fit certain
+        // criteria
+        player.playArea.gain(card);
         switch (card.getName()) {
-            case CURSE, ESTATE, COLONY, PROVINCE, DUCHY:
-                break;
-            case COPPER, SILVER, GOLD, PLATINUM:
+            case CURSE, ESTATE, COLONY, PROVINCE, DUCHY -> {
+            }
+            case COPPER, SILVER, GOLD, PLATINUM -> {
                 player.state.currentMoney += card.getExtraTreasure();
-                break;
-            case SMITHY:
+            }
+            case SMITHY -> {
                 // Tell the player to draw 4 more cards
                 player.drawToHand(card.getExtraCards());
-                break;
-            case VILLAGE:
+            }
+            case VILLAGE -> {
                 // Draw a card, add two actions
                 player.drawToHand(card.getExtraCards());
                 player.state.currentActions += card.getExtraActions();
-                break;
-            case WITCH:
+            }
+            case WITCH -> {
                 // Draw two cards
                 player.drawToHand(card.getExtraCards());
                 // all players but this one have to draw a curse, in player order (in case we
@@ -157,9 +187,9 @@ public class GameEngine {
                         nextPlayerId = 0;
                     }
                 }
-                break;
-            default:
-                break;
+            }
+            default -> {
+            }
 
         }
 

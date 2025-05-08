@@ -10,7 +10,7 @@ import java.util.Optional;
 
 // Tableau is a fancy HashMap of CardStacks, arranged by Type
 public class Tableau {
-    private HashMap<Card.Name, CardStack> supplyPiles;
+    private final HashMap<Card.Name, CardStack> supplyPiles;
 
     private Tableau(Builder builder) {
         supplyPiles = builder.supplyPiles;

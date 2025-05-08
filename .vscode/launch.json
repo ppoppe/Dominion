@@ -1,0 +1,14 @@
+{
+    "java.project.sourcePaths": [
+        "src"
+    ],
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Dominion",
+            "request": "launch",
+            "mainClass": "org.poppe.dominion.core.Dominion",
+            "projectName": "Dominion_f4bfb1cc"
+        }
+    ]
+}
