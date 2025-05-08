@@ -1,9 +1,7 @@
 package org.poppe.dominion.core;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import static org.poppe.dominion.core.Dominion.DO_PRINTING;
-
 /**
  *
  * @author poppe
@@ -160,6 +158,11 @@ public class GameEngine {
             }
             case COPPER, SILVER, GOLD, PLATINUM -> {
                 player.state.currentMoney += card.getExtraTreasure();
+            }
+            case CELLAR -> {
+                player.state.currentActions += card.getExtraActions();
+                // Tell the player to discard cards so they can draw more
+                ArrayList<Card> cardsToDiscard = player.respondToCellar();
             }
             case SMITHY -> {
                 // Tell the player to draw 4 more cards

@@ -29,7 +29,7 @@ public class Dominion {
             case VILLAGE_IDIOT:
               return new VillageIdiot(p);
             case VILLAGE_SMITHY:
-                return new VillageSmithy(p,2,0);
+                return new VillageSmithy(p,1,0);
             case WITCH:
                 return new Witch(p, 2);
             default:
@@ -50,8 +50,7 @@ public class Dominion {
         strategiesToUse.add(Strategies.VILLAGE_SMITHY);
         strategiesToUse.add(Strategies.WITCH);
 
-        int numPlayers = strategiesToUse.size();
-        HashMap<Strategies, Integer> numWinsPerPlayer = new HashMap<>(numPlayers);
+        HashMap<Strategies, Integer> numWinsPerPlayer = new HashMap<>();
         for (var s : strategiesToUse){
             numWinsPerPlayer.put(s, 0);
         }
@@ -63,7 +62,7 @@ public class Dominion {
             Collections.shuffle(thisGameStrategies);
             // Make one of each type of player we know about, and let 'em face off against
             // each other
-            var players = new ArrayList<Player>(numPlayers);
+            var players = new ArrayList<Player>();
             for (int i = 0; i < thisGameStrategies.size(); ++i) {
                 var player = constructPlayer(i, thisGameStrategies.get(i));
                 players.add(player);
@@ -72,7 +71,7 @@ public class Dominion {
             var gameEngine = new GameEngine(players);
             gameEngine.playGame();
 
-            var scores = new ArrayList<Integer>(numPlayers);
+            var scores = new ArrayList<Integer>();
             for (var p : players) {
                 scores.add(p.state.finalVP);
             }

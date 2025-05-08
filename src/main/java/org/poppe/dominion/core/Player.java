@@ -1,5 +1,6 @@
 package org.poppe.dominion.core;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -136,9 +137,9 @@ public class Player {
 
     protected Card drawFromDeck() {
         // Need a special method here to bring in discard if deck is empty
-        if (deck.numLeft() > 0) {
+        if (deck.numLeft() < 1) {
             // TODO Test if this consumes discardPile
-            deck.gain(this.discardPile);
+            deck.gain(discardPile);
             deck.shuffle();
         }
         return deck.draw();
@@ -146,11 +147,15 @@ public class Player {
 
     protected void doCleanup() {
         // Kick everything leftover from hand/play area to discard
-        discardPile.gain(this.hand); // TODO does this consume hand?
-        discardPile.gain(this.playArea);
+        discardPile.gain(hand); // TODO does this consume hand?
+        discardPile.gain(playArea);
         // Draw 5 cards from the deck and put them in our hand
         drawToHand(5);
         // Need to reset all the counters for our buys/money/etc
         state.reset();
+    }
+
+    protected ArrayList<Card> respondToCellar(){
+        return new ArrayList<>();
     }
 }
