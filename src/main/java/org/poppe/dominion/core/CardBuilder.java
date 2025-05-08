@@ -116,7 +116,7 @@ public class CardBuilder {
     }
 
     private Card makeVillage(int id) {
-        return new Card.Builder(id, Card.Name.VILLAGE, action, "Village", 2)
+        return new Card.Builder(id, Card.Name.VILLAGE, action, "Village", 3)
                 .withExtraActions(2).withExtraCards(1).build();
     }
 

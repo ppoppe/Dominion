@@ -19,17 +19,17 @@ public class Dominion {
 
     private enum Strategies{
         BIG_MONEY,
-        //VILLAGE_IDIOT,
+        VILLAGE_IDIOT,
         VILLAGE_SMITHY,
         WITCH
     }
 
     private static Strategy StrategyFactory(Player p, Strategies s) {
         switch (s) {
-            //case VILLAGE_IDIOT:
-            //   return new VillageIdiot(p);
+            case VILLAGE_IDIOT:
+              return new VillageIdiot(p);
             case VILLAGE_SMITHY:
-                return new VillageSmithy(p);
+                return new VillageSmithy(p,2,0);
             case WITCH:
                 return new Witch(p, 2);
             default:
@@ -45,20 +45,21 @@ public class Dominion {
     }
 
     public static void main(String[] args) {
-        int numPlayers = Strategies.values().length;
+        ArrayList<Strategies> strategiesToUse = new ArrayList<>();
+        strategiesToUse.add(Strategies.BIG_MONEY);
+        strategiesToUse.add(Strategies.VILLAGE_SMITHY);
+        strategiesToUse.add(Strategies.WITCH);
+
+        int numPlayers = strategiesToUse.size();
         HashMap<Strategies, Integer> numWinsPerPlayer = new HashMap<>(numPlayers);
-        for (var s : Strategies.values()){
+        for (var s : strategiesToUse){
             numWinsPerPlayer.put(s, 0);
         }
         int numCleanlyWonGames = 0;
-        ArrayList<Strategies> availableStrategies = new ArrayList<>(numPlayers);
-        for (var strat : Strategies.values()) {
-            availableStrategies.add(strat);
-        }
 
         while (numCleanlyWonGames < 10000) {
             // Each game, shuffle the strategies to eliminate bias for who goes first
-            var thisGameStrategies = new ArrayList<>(availableStrategies);
+            var thisGameStrategies = new ArrayList<>(strategiesToUse);
             Collections.shuffle(thisGameStrategies);
             // Make one of each type of player we know about, and let 'em face off against
             // each other
@@ -95,7 +96,13 @@ public class Dominion {
                 }
             });
         }
+        // Turn winning numbers into %
+        HashMap<Strategies,Float> winningPercentages = new HashMap<>();
+        for (HashMap.Entry<Strategies,Integer> entry : numWinsPerPlayer.entrySet()){
+            float wins = entry.getValue();
+            winningPercentages.put(entry.getKey(), wins / numCleanlyWonGames * 100);
+        }
         System.out.println(String.format("Number of games won out of %d",numCleanlyWonGames));
-        System.out.println(numWinsPerPlayer);
+        System.out.println(String.format("Winning %%: %s",winningPercentages));
     }
 }

@@ -13,13 +13,15 @@ import org.poppe.dominion.core.Tableau;
  */
 // We will mostly want to do what big money does, with a couple minor exceptions
 public class VillageSmithy extends BigMoney {
-    private int numSmithiesDesired = 1;
-    private int numVillagesDesired = 2;
+    private int numSmithiesDesired;
+    private int numVillagesDesired;
     private int numSmithiesPurchased = 0;
     private int numVillagesPurchased = 0;
-    public VillageSmithy(Player player) {
+    public VillageSmithy(Player player, int numSmithiesDesired, int numVillagesDesired) {
         super(player);
         name = "VillageSmithy";
+        this.numSmithiesDesired = numSmithiesDesired;
+        this.numVillagesDesired = numVillagesDesired;
     }
 
     @Override
@@ -42,12 +44,12 @@ public class VillageSmithy extends BigMoney {
     }
 
     @Override
-    public Optional<Name> pickACardToBuy_2(Tableau tableau) {
+    public Optional<Name> pickACardToBuy_3(Tableau tableau) {
         if (numVillagesPurchased < numVillagesDesired && tableau.numLeft(Card.Name.VILLAGE) > 0) {
             ++numVillagesPurchased;
             return Optional.of(Card.Name.VILLAGE);
         }
         // If we don't want a village, punt to BigMoney's implementation
-        return super.pickACardToBuy_2(tableau);
+        return super.pickACardToBuy_3(tableau);
     }
 }

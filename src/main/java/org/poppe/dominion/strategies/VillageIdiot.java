@@ -36,13 +36,4 @@ public class VillageIdiot extends BigMoney {
         }
         return super.pickACardToBuy_3(tableau);
     }
-
-    @Override
-    public Optional<Name> pickACardToBuy_2(Tableau tableau) {
-        // BUY ALL THEM VILLAGES
-        if (tableau.numLeft(Card.Name.VILLAGE) > 0) {
-            return Optional.of(Card.Name.VILLAGE);
-        }
-        return super.pickACardToBuy_2(tableau);
-    }
 }
