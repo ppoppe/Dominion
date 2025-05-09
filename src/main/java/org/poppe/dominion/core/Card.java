@@ -21,6 +21,7 @@ public final class Card {
         COLONY,
         CURSE,
         CELLAR,
+        MINE,
         SMITHY,
         VILLAGE,
         WITCH

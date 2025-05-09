@@ -32,6 +32,11 @@ public abstract class Strategy {
      * @return Array of Integers representing indices in the hand to be discarded
      */
     public abstract ArrayList<Integer> chooseDiscardsForCellar();
+    /**
+     * Function will pick a treasure card to trash for an upgrade
+     * @return Index of card to trash, if any
+     */
+    public abstract Pair<Optional<Integer>,Optional<Card.Name>> executeMine(Tableau tableau);
 
     public Optional<Card.Name> pickACardToBuy(Tableau tableau) {
         Optional<Card.Name> card = Optional.empty();

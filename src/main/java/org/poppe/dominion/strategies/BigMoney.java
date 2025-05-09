@@ -122,4 +122,16 @@ public class BigMoney extends Strategy {
         // nothing
         return new ArrayList<>();
     }
+
+    @Override
+    public Pair<Optional<Integer>,Optional<Card.Name>> executeMine(Tableau tableau) {
+        // Big Money isn't going to have a Mine, so our default action for us and
+        // anyone extending us who also doesn't want to deal with Mines is to do
+        // nothing
+        Optional<Integer> i = Optional.empty();
+        Optional<Card.Name> cn = Optional.empty();
+        return Pair.of(i, cn);
+    }
+
+    
 }

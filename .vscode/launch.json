@@ -17,13 +17,6 @@
             "request": "launch",
             "mainClass": "org.poppe.dominion.core.Dominion",
             "projectName": "Dominion_53d2b805"
-        },
-        {
-            "type": "java",
-            "name": "Dominion",
-            "request": "launch",
-            "mainClass": "org.poppe.dominion.core.Dominion",
-            "projectName": "dominion"
         }
     ]
 }

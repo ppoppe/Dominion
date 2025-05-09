@@ -48,6 +48,7 @@ public class CardBuilder {
             case PROVINCE -> makeProvince(cardUniqueId);
             case COLONY -> makeColony(cardUniqueId);
             case CELLAR -> makeCellar(cardUniqueId);
+            case MINE -> makeMine(cardUniqueId);
             case SMITHY -> makeSmithy(cardUniqueId);
             case VILLAGE -> makeVillage(cardUniqueId);
             case WITCH -> makeWitch(cardUniqueId);
@@ -114,6 +115,10 @@ public class CardBuilder {
     private Card makeCellar(int id) {
         return new Card.Builder(id, Card.Name.CELLAR, action, "Cellar", 2)
                 .withExtraActions(1).build();
+    }
+
+    private Card makeMine(int id) {
+        return new Card.Builder(id, Card.Name.MINE, action, "Mine", 5).build();
     }
 
     private Card makeSmithy(int id) {

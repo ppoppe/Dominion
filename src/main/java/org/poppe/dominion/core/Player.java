@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.poppe.dominion.strategies.Pair;
 import org.poppe.dominion.strategies.Strategy;
 
 /**
@@ -219,5 +220,20 @@ public class Player {
             cardsToDiscard.gain(hand.pullCard(i));
         }
         return cardsToDiscard;
+    }
+
+
+    protected Pair<Optional<Card>,Optional<Card.Name>> respondToMine(Tableau tableau){
+        var indexCardPair = strategy.executeMine(tableau);
+        Optional<Card> c = Optional.empty();
+        Optional<Card.Name> cn = indexCardPair.getSecond();
+        if (indexCardPair.getFirst().isPresent()) {
+            c = Optional.of(hand.pullCard(indexCardPair.getFirst().get()));
+        }
+        else {
+            // If no card to trash, then there's no card to get from tableau. Reset just in case strategy goofed
+            cn = Optional.empty();
+        }
+        return Pair.of(c,cn);
     }
 }

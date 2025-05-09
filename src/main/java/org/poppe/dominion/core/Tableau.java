@@ -12,6 +12,8 @@ import java.util.Optional;
 public class Tableau {
     private final HashMap<Card.Name, CardStack> supplyPiles;
 
+    protected final CardStack trashPile = new CardStack();
+
     private Tableau(Builder builder) {
         supplyPiles = builder.supplyPiles;
     }

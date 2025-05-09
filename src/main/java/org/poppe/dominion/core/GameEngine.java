@@ -17,6 +17,7 @@ public class GameEngine {
         // Build the tableau before we do anything else
         tableau = new Tableau.Builder(players.size())
                 .withCard(Card.Name.CELLAR)
+                .withCard(Card.Name.MINE)
                 .withCard(Card.Name.SMITHY)
                 .withCard(Card.Name.VILLAGE)
                 .withCard(Card.Name.WITCH)
@@ -171,16 +172,67 @@ public class GameEngine {
             case CELLAR -> {
                 player.state.currentActions += card.getExtraActions();
                 // Tell the player to discard cards so they can draw more
-                var cardsToDiscard = player.respondToCellar();
+                var cellarCardsToDiscard = player.respondToCellar();
                 if (DO_PRINTING) {
-                    for (int i = 0; i < cardsToDiscard.numLeft(); ++i){
-                    System.out.println(String.format("    Discarding: %s", cardsToDiscard.examine(i).getNameStr()));
+                    for (int i = 0; i < cellarCardsToDiscard.numLeft(); ++i) {
+                        System.out.println(String.format("    Discarding: %s",
+                                cellarCardsToDiscard.examine(i).getNameStr()));
+                    }
                 }
-                }
-                int numDiscarding = cardsToDiscard.numLeft();
+                int numDiscarding = cellarCardsToDiscard.numLeft();
                 // Move those cards to their discard pile
-                player.discardPile.gain(cardsToDiscard);
+                player.discardPile.gain(cellarCardsToDiscard);
                 player.drawToHand(numDiscarding);
+            }
+            case MINE -> {
+                var mineTrashGain = player.respondToMine(tableau);
+                if (mineTrashGain.getFirst().isPresent()) {
+                    Card cardToTrash = mineTrashGain.getFirst().get();
+                    // Better be a treasure
+                    if (!cardToTrash.getTypes().contains(Card.Type.TREASURE)) {
+                        throw new IllegalStateException(String.format(
+                                "Player %d was asked for an treasure card and returned %s, which is not a treasure card",
+                                player.id, cardToTrash.getName().toString()));
+                    }
+                    if (DO_PRINTING) {
+                        System.out.println(
+                                String.format("   %s trashes a %s", player.name, cardToTrash.getNameStr()));
+                    }
+                    tableau.trashPile.gain(cardToTrash);
+                    if (mineTrashGain.getSecond().isPresent()) {
+                        Card.Name name = mineTrashGain.getSecond().get();
+                        if (tableau.numLeft(name) < 1) {
+                            throw new IllegalStateException(String.format(
+                                    "Player %d asked to trade up to %s, but that pile is empty",
+                                    player.id, name.toString()));
+                        }
+                        if (tableau.numLeft(name) < 1) {
+                            throw new IllegalStateException(String.format(
+                                    "Player %d asked to trash a treasure %s, but that pile is empty",
+                                    player.id, name.toString()));
+                        }
+                        // Look at a card in the pile so we can see how much it costs
+                        int cost = tableau.getStack(name).examine(0).getCost();
+                        if (cost > cardToTrash.getCost() + 3) {
+                            throw new IllegalStateException(String.format(
+                                    "Player %d was asked to pick a card costing no more than 3 more than the card to trash (%s) but picked %s",
+                                            player.id, cardToTrash.getName(), name));
+                        }
+                        var gainedCard = tableau.pullCard(name).get(); // returns optional, but we know it'll exist
+                        if (DO_PRINTING) {
+                            System.out.println(
+                                    String.format("   %s buys a %s", player.name, gainedCard.getNameStr()));
+                        }
+                        // Better be a treasure
+                        if (!gainedCard.getTypes().contains(Card.Type.TREASURE)) {
+                            throw new IllegalStateException(String.format(
+                                    "Player %d was asked pick a treasure card and chose %s, which is not a treasure card",
+                                    player.id, gainedCard.getName().toString()));
+                        }
+                        // Gain card to hand
+                        player.hand.gain(gainedCard);
+                    }
+                }
             }
             case SMITHY -> {
                 // Tell the player to draw 4 more cards
