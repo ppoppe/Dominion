@@ -9,6 +9,13 @@
             "name": "Dominion",
             "request": "launch",
             "mainClass": "org.poppe.dominion.core.Dominion",
+            "projectName": "Dominion_f4bfb1cc"
+        },
+        {
+            "type": "java",
+            "name": "Dominion",
+            "request": "launch",
+            "mainClass": "org.poppe.dominion.core.Dominion",
             "projectName": "Dominion_53d2b805"
         },
         {

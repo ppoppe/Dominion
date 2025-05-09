@@ -1,8 +1,10 @@
 package org.poppe.dominion.core;
 
-import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.poppe.dominion.strategies.Strategy;
 
@@ -17,6 +19,7 @@ public class Player {
         protected int currentMoney = 0;
         // Placeholder for GameEngine to eventually store our score in
         protected int finalVP = 0;
+        protected int turnsTaken = 0;
 
         public PlayerState() {
         }
@@ -49,6 +52,28 @@ public class Player {
         return hand.numLeft();
     }
 
+    public int getTreasure() {
+        return hand.getTotalTreasure();
+    }
+
+    public boolean hasCard(Card.Name name){
+        for (int i=0; i<handSize(); ++i){
+            if (hand.examine(i).getName() == name){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasCard(Card.Type type){
+        for (int i=0; i<handSize(); ++i){
+            if (hand.examine(i).getTypes().contains(type)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Optional<Integer> selectCard(Card.Name name){
         for (int i=0; i<handSize(); ++i){
             if (hand.examine(i).getName() == name){
@@ -57,6 +82,27 @@ public class Player {
         }
         return Optional.empty();
     }
+
+    public Set<Integer> selectAllCards(Card.Name name){
+        Set<Integer> cards = new HashSet<>();
+        for (int i=0; i<handSize(); ++i){
+            if (hand.examine(i).getName() == name){
+                cards.add(i);
+            }
+        }
+        return cards;
+    }
+
+    public Set<Integer> selectAllCards(Card.Type type){
+        Set<Integer> cards = new HashSet<>();
+        for (int i=0; i<handSize(); ++i){
+            if (hand.examine(i).getTypes().contains(type)){
+                cards.add(i);
+            }
+        }
+        return cards;
+    }
+
     public Optional<Integer> selectCard(Card.Type type){
         for (int i=0; i<handSize(); ++i){
             if (hand.examine(i).getTypes().contains(type)){
@@ -96,9 +142,15 @@ public class Player {
         drawToHand(1);
     }
 
-    protected void drawToHand(int numCards){
-        for (int i=0; i< numCards; i++){
-            hand.gain(this.drawFromDeck());
+    protected void drawToHand(int numCards) {
+        for (int i = 0; i < numCards; i++) {
+            var optionalCard = this.drawFromDeck();
+            if (optionalCard.isPresent()) {
+                hand.gain(optionalCard.get());
+            } else {
+                // NO MORE CARDS TO DRAW!!!
+                return;
+            }
         }
     }
 
@@ -135,19 +187,22 @@ public class Player {
         }
     }
 
-    protected Card drawFromDeck() {
+    private Optional<Card> drawFromDeck() {
         // Need a special method here to bring in discard if deck is empty
         if (deck.numLeft() < 1) {
-            // TODO Test if this consumes discardPile
             deck.gain(discardPile);
             deck.shuffle();
         }
-        return deck.draw();
+        // Sometimes we will have drawn every card we have so I guess we're done drawing cards!
+        if (deck.numLeft() < 1) {
+            return Optional.empty();
+        }
+        return Optional.of(deck.draw());
     }
 
     protected void doCleanup() {
         // Kick everything leftover from hand/play area to discard
-        discardPile.gain(hand); // TODO does this consume hand?
+        discardPile.gain(hand);
         discardPile.gain(playArea);
         // Draw 5 cards from the deck and put them in our hand
         drawToHand(5);
@@ -155,7 +210,14 @@ public class Player {
         state.reset();
     }
 
-    protected ArrayList<Card> respondToCellar(){
-        return new ArrayList<>();
+    protected CardStack respondToCellar(){
+        var indicesToDiscard = strategy.chooseDiscardsForCellar();
+        // Need to reverse sort the indices so we can remove them from the hand
+        indicesToDiscard.sort(Comparator.reverseOrder());
+        CardStack cardsToDiscard = new CardStack();
+        for (var i : indicesToDiscard){
+            cardsToDiscard.gain(hand.pullCard(i));
+        }
+        return cardsToDiscard;
     }
 }

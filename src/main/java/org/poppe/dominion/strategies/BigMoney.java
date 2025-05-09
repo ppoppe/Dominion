@@ -1,5 +1,6 @@
 package org.poppe.dominion.strategies;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
@@ -42,7 +43,7 @@ public class BigMoney extends Strategy {
 
     @Override
     public Optional<Name> pickACardToBuy_10(Tableau tableau) {
-        return(pickACardToBuy_9(tableau));
+        return (pickACardToBuy_9(tableau));
     }
 
     @Override
@@ -63,7 +64,7 @@ public class BigMoney extends Strategy {
 
     @Override
     public Optional<Name> pickACardToBuy_7(Tableau tableau) {
-        return(pickACardToBuy_6(tableau));
+        return (pickACardToBuy_6(tableau));
     }
 
     @Override
@@ -76,7 +77,8 @@ public class BigMoney extends Strategy {
 
     @Override
     public Optional<Name> pickACardToBuy_5(Tableau tableau) {
-        // If provinces are almost out, or colonies (assuming we have that pile present) are almost out
+        // If provinces are almost out, or colonies (assuming we have that pile present)
+        // are almost out
         boolean nearEndgame = tableau.numLeft(Card.Name.PROVINCE) < 5;
         nearEndgame = nearEndgame || (tableau.hasCardPile(Card.Name.COLONY) && tableau.numLeft(Card.Name.COLONY) < 5);
         if (tableau.numLeft(Card.Name.DUCHY) > 0 && nearEndgame) {
@@ -87,7 +89,7 @@ public class BigMoney extends Strategy {
 
     @Override
     public Optional<Name> pickACardToBuy_4(Tableau tableau) {
-        return(pickACardToBuy_3(tableau));
+        return (pickACardToBuy_3(tableau));
     }
 
     @Override
@@ -111,5 +113,13 @@ public class BigMoney extends Strategy {
     @Override
     public Optional<Name> pickACardToBuy_0(Tableau tableau) {
         return Optional.empty();
+    }
+
+    @Override
+    public ArrayList<Integer> chooseDiscardsForCellar() {
+        // Big Money isn't going to have a Cellar, so our default action for us and
+        // anyone extending us who also doesn't want to deal with cellars is to do
+        // nothing
+        return new ArrayList<>();
     }
 }

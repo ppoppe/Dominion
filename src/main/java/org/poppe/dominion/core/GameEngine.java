@@ -2,6 +2,7 @@ package org.poppe.dominion.core;
 
 import java.util.ArrayList;
 import static org.poppe.dominion.core.Dominion.DO_PRINTING;
+
 /**
  *
  * @author poppe
@@ -9,12 +10,13 @@ import static org.poppe.dominion.core.Dominion.DO_PRINTING;
 public class GameEngine {
 
     private final ArrayList<Player> players;
-    private int turn = 0;
+    public int turn = 0;
     public Tableau tableau;
 
     public GameEngine(ArrayList<Player> players) {
         // Build the tableau before we do anything else
         tableau = new Tableau.Builder(players.size())
+                .withCard(Card.Name.CELLAR)
                 .withCard(Card.Name.SMITHY)
                 .withCard(Card.Name.VILLAGE)
                 .withCard(Card.Name.WITCH)
@@ -42,7 +44,8 @@ public class GameEngine {
             // Iterate through players and let each take their turn
             for (var player : players) {
                 takeTurn(player);
-                if (tableau.numLeft(Card.Name.PROVINCE) < 1){
+                ++player.state.turnsTaken;
+                if (tableau.numLeft(Card.Name.PROVINCE) < 1) {
                     keepGoing = false;
                     break;
                 }
@@ -70,7 +73,8 @@ public class GameEngine {
 
     private void takeTurn(Player player) {
         // Do the action phase
-        while (player.state.currentActions > 0) {
+        boolean keepGoing = true;
+        while (keepGoing) {
             // Ask the player for a card to play
             var card = player.playActionCard();
             if (card.isPresent()) {
@@ -79,18 +83,23 @@ public class GameEngine {
                             "Player %d was asked for an action card and returned %s, which is not an action card",
                             player.id, card.get().getName().toString()));
                 }
-                // First thing to do is note that the player has executed an action card and
-                // thus has one less action
-                --player.state.currentActions;
                 if (DO_PRINTING) {
-                    System.out.println(String.format("  %s plays a %s", player.name, card.get().getName().toString()));
+                    System.out.println(String.format("  %s plays a %s", player.name, card.get().getNameStr()));
                 }
+                // Decrement actions for playing the card now
+                --player.state.currentActions;
                 // Now go and do the card
                 executeCard(player, card.get());
             }
             // If they didn't pass me a card, then we can break out of the while loop and go
             // to the next phase
-            break;
+            else {
+                keepGoing = false;
+            }
+            // If out of actions, then go to next state
+            if (player.state.currentActions < 1) {
+                keepGoing = false;
+            }
         }
         // Because in later variants, players actually have to lay down money "in
         // order",
@@ -108,7 +117,7 @@ public class GameEngine {
         }
         // Done laying down treasure now, let the player execute some buys
         if (DO_PRINTING) {
-            System.out.println(String.format("  %s has %d money", player.name, player.state.currentMoney));
+            System.out.println(String.format("  %s has $%d", player.name, player.state.currentMoney));
         }
         while (player.state.currentBuys > 0) {
             // Pass the player a view into the current tableau
@@ -129,10 +138,10 @@ public class GameEngine {
                             player.id, name.toString(), player.state.currentMoney, cost));
                 }
                 // Okeyday then, let's mechanize that purchase
-                if (DO_PRINTING) {
-                    System.out.println(String.format("   %s buys a %s", player.name, cardName.get().toString()));
-                }
                 var purchasedCard = tableau.pullCard(name).get(); // returns optional, but we know it'll be there
+                if (DO_PRINTING) {
+                    System.out.println(String.format("   %s buys a %s", player.name, purchasedCard.getNameStr()));
+                }
                 player.state.currentMoney -= purchasedCard.getCost();
                 --player.state.currentBuys;
                 player.discardPile.gain(purchasedCard);
@@ -162,7 +171,16 @@ public class GameEngine {
             case CELLAR -> {
                 player.state.currentActions += card.getExtraActions();
                 // Tell the player to discard cards so they can draw more
-                ArrayList<Card> cardsToDiscard = player.respondToCellar();
+                var cardsToDiscard = player.respondToCellar();
+                if (DO_PRINTING) {
+                    for (int i = 0; i < cardsToDiscard.numLeft(); ++i){
+                    System.out.println(String.format("    Discarding: %s", cardsToDiscard.examine(i).getNameStr()));
+                }
+                }
+                int numDiscarding = cardsToDiscard.numLeft();
+                // Move those cards to their discard pile
+                player.discardPile.gain(cardsToDiscard);
+                player.drawToHand(numDiscarding);
             }
             case SMITHY -> {
                 // Tell the player to draw 4 more cards
@@ -193,9 +211,7 @@ public class GameEngine {
             }
             default -> {
             }
-
         }
-
     }
 
     private void score(Player player) {

@@ -1,5 +1,6 @@
 package org.poppe.dominion.strategies;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
@@ -25,6 +26,12 @@ public abstract class Strategy {
     public abstract Optional<Integer> pickAnActionCard();
     
     public abstract Optional<Integer> pickATreasureCard();
+
+    /**
+     * Function will pick what cards from the hands should be discarded while playing Cellar
+     * @return Array of Integers representing indices in the hand to be discarded
+     */
+    public abstract ArrayList<Integer> chooseDiscardsForCellar();
 
     public Optional<Card.Name> pickACardToBuy(Tableau tableau) {
         Optional<Card.Name> card = Optional.empty();
