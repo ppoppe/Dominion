@@ -148,13 +148,11 @@ public class Dominion {
         // Turn winning numbers into %
         HashMap<Strategies, Float> winningPercentages = new HashMap<>();
         for (HashMap.Entry<Strategies, Integer> entry : numWinsPerPlayer.entrySet()) {
-            float wins = entry.getValue();
-            winningPercentages.put(entry.getKey(), wins / numGamesToPlay * 100);
+            winningPercentages.put(entry.getKey(), (float)entry.getValue() / numGamesToPlay * 100);
         }
         HashMap<Strategies, Float> tyingPercentages = new HashMap<>();
         for (HashMap.Entry<Strategies, Integer> entry : numTiesPerPlayer.entrySet()) {
-            float ties = entry.getValue();
-            tyingPercentages.put(entry.getKey(), ties / numGamesToPlay * 100);
+            tyingPercentages.put(entry.getKey(), (float)entry.getValue() / numGamesToPlay * 100);
         }
         System.out.println(String.format("Winning %%: %s", winningPercentages));
         System.out.println(String.format("Tying %%: %s", tyingPercentages));

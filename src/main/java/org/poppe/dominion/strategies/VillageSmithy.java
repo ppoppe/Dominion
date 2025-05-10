@@ -17,7 +17,6 @@ public class VillageSmithy extends BigMoney {
     private int numVillagesDesired;
     private int numSmithiesPurchased = 0;
     private int numVillagesPurchased = 0;
-    private int numSilversPurchased = 0;
     public VillageSmithy(Player player, int numSmithiesDesired, int numVillagesDesired) {
         super(player);
         name = "VillageSmithy";
@@ -27,13 +26,6 @@ public class VillageSmithy extends BigMoney {
 
     @Override
     public Optional<Integer> pickAnActionCard() {
-        // DEBUGGING
-        if (player.hasCard(Card.Name.VILLAGE) && player.hasCard(Card.Name.SMITHY))
-        {
-            var debugStop = true;
-        }
-
-
         // Play all villages, then all smithies
         var village = player.selectCard(Card.Name.VILLAGE);
         if (village.isPresent()) return village;
@@ -57,11 +49,7 @@ public class VillageSmithy extends BigMoney {
             ++numVillagesPurchased;
             return Optional.of(Card.Name.VILLAGE);
         }
-        // If we don't want a village, punt to BigMoney's implementation (probably a silver but check)
-        var card = super.pickACardToBuy_3(tableau);
-        if (card.isPresent() && card.get() == Card.Name.SILVER){
-            ++numSilversPurchased;
-        }
-        return card;
+        // If we don't want a village, punt to BigMoney's implementation
+        return super.pickACardToBuy_3(tableau);
     }
 }
