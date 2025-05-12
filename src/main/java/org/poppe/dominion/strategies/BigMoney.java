@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
 import org.poppe.dominion.core.Card.Name;
-import org.poppe.dominion.core.Player;
 import org.poppe.dominion.core.Tableau;
 
 /**
@@ -13,9 +12,8 @@ import org.poppe.dominion.core.Tableau;
  * @author poppe
  */
 public class BigMoney extends Strategy {
-    public BigMoney(Player player) {
-        super(player);
-        name = "Big Money";
+    public BigMoney() {
+        this.name = "Big Money";
     }
 
     @Override

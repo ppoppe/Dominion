@@ -68,7 +68,7 @@ public final class Card {
         return Collections.unmodifiableList(types);
     }
 
-    public String getNameStr() {
+    public String toString() {
         return nameStr;
     }
 

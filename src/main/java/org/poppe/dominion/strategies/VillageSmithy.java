@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
 import org.poppe.dominion.core.Card.Name;
-import org.poppe.dominion.core.Player;
 import org.poppe.dominion.core.Tableau;
 
 /**
@@ -17,6 +16,7 @@ public class VillageSmithy extends BigMoney {
     private int numVillagesDesired;
     private int numSmithiesPurchased = 0;
     private int numVillagesPurchased = 0;
+    private int numSilversPurchased = 0;
     public VillageSmithy(Player player, int numSmithiesDesired, int numVillagesDesired) {
         super(player);
         name = "VillageSmithy";
@@ -49,7 +49,11 @@ public class VillageSmithy extends BigMoney {
             ++numVillagesPurchased;
             return Optional.of(Card.Name.VILLAGE);
         }
-        // If we don't want a village, punt to BigMoney's implementation
-        return super.pickACardToBuy_3(tableau);
+        // If we don't want a village, punt to BigMoney's implementation (probably a silver but check)
+        var card = super.pickACardToBuy_3(tableau);
+        if (card.isPresent() && card.get() == Card.Name.SILVER){
+            ++numSilversPurchased;
+        }
+        return card;
     }
 }

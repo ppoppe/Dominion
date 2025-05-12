@@ -21,6 +21,7 @@ public class Player {
         // Placeholder for GameEngine to eventually store our score in
         protected int finalVP = 0;
         protected int turnsTaken = 0;
+        protected GameResult gameResult;
 
         public PlayerState() {
         }
@@ -46,8 +47,8 @@ public class Player {
 
     public final int id;
     public String name = "";
-    protected final CardStack deck;
-    protected final CardStack hand;
+    protected CardStack deck;
+    protected CardStack hand;
 
     public int handSize() {
         return hand.numLeft();
@@ -121,13 +122,24 @@ public class Player {
         return hand.examine(index).getTypes();
     }
 
-    protected final CardStack playArea;
-    protected final CardStack discardPile;
+    protected CardStack playArea;
+    protected CardStack discardPile;
     protected Strategy strategy = null;
 
     protected Player(int id) {
         this.id = id;
+    }
+    protected void initalize(Tableau tableau){
         this.deck = new CardStack();
+        for (int i=0; i<7; ++i)
+        {
+            deck.gain(tableau.getStack(Card.Name.COPPER).draw());
+        }
+        for (int i=0; i<3; ++i)
+        {
+            deck.gain(tableau.getStack(Card.Name.ESTATE).draw());
+        }
+        this.deck.shuffle();
         this.hand = new CardStack();
         this.playArea = new CardStack();
         this.discardPile = new CardStack();
@@ -137,12 +149,13 @@ public class Player {
     protected void setStrategy(Strategy strategy) {
         this.strategy = strategy;
         this.name = String.format("%s_%d",strategy.name,this.id);
+        this.strategy.setPlayer(this);
     }
 
     protected void drawToHand() {
         drawToHand(1);
     }
-
+    // Draws numCards from deck to hand
     protected void drawToHand(int numCards) {
         for (int i = 0; i < numCards; i++) {
             var optionalCard = this.drawFromDeck();
@@ -187,7 +200,7 @@ public class Player {
             return Optional.empty();
         }
     }
-
+    
     private Optional<Card> drawFromDeck() {
         // Need a special method here to bring in discard if deck is empty
         if (deck.numLeft() < 1) {

@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.poppe.dominion.core.Card;
 import org.poppe.dominion.core.Card.Name;
-import org.poppe.dominion.core.Player;
 import org.poppe.dominion.core.Tableau;
 
 /**
@@ -36,13 +35,12 @@ public class BigMoney_Plus extends BigMoney {
     private int numVillageBought = 0;
     private int numWitchBought = 0;
     private BigMoney_Plus(Builder b) {
-        super(b.player);
         this.numCellarToBuy = b.numCellarToBuy;
         this.numMineToBuy = b.numMineToBuy;
         this.numSmithyToBuy = b.numSmithyToBuy;
         this.numVillageToBuy = b.numVillageToBuy;
         this.numWitchToBuy = b.numWitchToBuy;
-        name = "Big Money+";
+        this.name = b.sb.toString();
     }
 
     public static class Builder {
@@ -51,28 +49,33 @@ public class BigMoney_Plus extends BigMoney {
         private int numSmithyToBuy = 0;
         private int numVillageToBuy = 0;
         private int numWitchToBuy = 0;
-        private final Player player;
-        public Builder(Player player){
-            this.player = player;
+        private StringBuilder sb = new StringBuilder();
+        public Builder(){
+            this.sb.append("Big Money+");
         }
         public Builder withCellars(int numToBuy){
             this.numCellarToBuy = numToBuy;
+            this.sb.append("Cellar");
             return this;
         }
         public Builder withMines(int numToBuy){
             this.numMineToBuy = numToBuy;
+            this.sb.append("Mine");
             return this;
         }
         public Builder withSmithies(int numToBuy){
             this.numSmithyToBuy = numToBuy;
+            this.sb.append("Smithy");
             return this;
         }
         public Builder withVillages(int numToBuy){
             this.numVillageToBuy = numToBuy;
+            this.sb.append("Village");
             return this;
         }
         public Builder withWitches(int numToBuy){
             this.numWitchToBuy = numToBuy;
+            this.sb.append("Witch");
             return this;
         }
 
@@ -83,11 +86,21 @@ public class BigMoney_Plus extends BigMoney {
 
     @Override
     public Optional<Integer> pickAnActionCard() {
-        // Pick an action card and play it, who even knows what it might be :)
+        // Pick an action card and play it
         if (player.hasCard(Card.Type.ACTION)) {
             return player.selectCard(Card.Type.ACTION);
         }
         return super.pickAnActionCard();
+    }
+
+    @Override
+    public Optional<Name> pickACardToBuy_6(Tableau tableau) {
+        // If we don't have a witch yet, get one
+        if (numWitchBought < 1 && numWitchToBuy > 0 && tableau.numLeft(Card.Name.WITCH) > 0) {
+            ++numWitchBought;
+            return Optional.of(Card.Name.WITCH);
+        }
+        return super.pickACardToBuy_6(tableau);
     }
 
     @Override

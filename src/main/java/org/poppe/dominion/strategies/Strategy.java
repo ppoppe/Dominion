@@ -16,7 +16,10 @@ public abstract class Strategy {
     protected Player player;
     public String name;
 
-    public Strategy(Player player) {
+    public Strategy() {
+    }
+
+    public void setPlayer(Player player) {
         this.player = player;
     }
 

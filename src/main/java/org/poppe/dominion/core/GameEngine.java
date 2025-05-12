@@ -1,6 +1,9 @@
 package org.poppe.dominion.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.poppe.dominion.core.Dominion.DO_PRINTING;
 
 /**
@@ -13,9 +16,9 @@ public class GameEngine {
     public int turn = 0;
     public Tableau tableau;
 
-    public GameEngine(ArrayList<Player> players) {
+    public GameEngine(List<Player> players) {
         // Build the tableau before we do anything else
-        tableau = new Tableau.Builder(players.size())
+        this.tableau = new Tableau.Builder(players.size())
                 .withCard(Card.Name.CELLAR)
                 .withCard(Card.Name.MINE)
                 .withCard(Card.Name.SMITHY)
@@ -25,11 +28,10 @@ public class GameEngine {
 
         this.players = new ArrayList<>(players);
 
-        // Before the game officially starts, give all the players a starting deck,
-        // then tell all the players to CleanUp so they
-        // draw a starting hand
-        players.forEach((player) -> {
-            player.deck.gain(initializeHand());
+        // Before the game officially starts, initialize players so they make decks,
+        // then tell all the players to CleanUp so they draw a starting hand
+        this.players.forEach((player) -> {
+            player.initalize(tableau);
             player.doCleanup();
         });
     }
@@ -39,9 +41,7 @@ public class GameEngine {
         boolean keepGoing = true;
         while (keepGoing) {
             ++turn;
-            if (DO_PRINTING) {
-                System.out.println(String.format("Turn %d:", turn));
-            }
+            log("Turn %d:", turn);
             // Iterate through players and let each take their turn
             for (var player : players) {
                 takeTurn(player);
@@ -52,27 +52,18 @@ public class GameEngine {
                 }
             }
         }
-        // Now that game is over, score each player
+        // Now that game is over, score each player and do some printing
         players.forEach((player) -> {
+            // logHand(player);
+            // logDeck(player);
+            // logDiscard(player);
             score(player);
         });
-    }
-
-    // Draw requisite copper and estate cards from Tableau to feed to player
-    // Use unprotected .get() since we know for a fact there's plenty of cards there
-    // for now
-    private CardStack initializeHand() {
-        CardStack cs = new CardStack();
-        for (int i = 0; i < 7; i++) {
-            cs.gain(tableau.pullCard(Card.Name.COPPER).get());
-        }
-        for (int i = 0; i < 3; i++) {
-            cs.gain(tableau.pullCard(Card.Name.ESTATE).get());
-        }
-        return cs;
+        determineWinner(players);
     }
 
     private void takeTurn(Player player) {
+        logHand(player);
         // Do the action phase
         boolean keepGoing = true;
         while (keepGoing) {
@@ -84,9 +75,7 @@ public class GameEngine {
                             "Player %d was asked for an action card and returned %s, which is not an action card",
                             player.id, card.get().getName().toString()));
                 }
-                if (DO_PRINTING) {
-                    System.out.println(String.format("  %s plays a %s", player.name, card.get().getNameStr()));
-                }
+                log("  %s plays a %s", player.name, card.get().toString());
                 // Decrement actions for playing the card now
                 --player.state.currentActions;
                 // Now go and do the card
@@ -117,9 +106,7 @@ public class GameEngine {
             card = player.playTreasureCard();
         }
         // Done laying down treasure now, let the player execute some buys
-        if (DO_PRINTING) {
-            System.out.println(String.format("  %s has $%d", player.name, player.state.currentMoney));
-        }
+        log("  %s has $%d", player.name, player.state.currentMoney);
         while (player.state.currentBuys > 0) {
             // Pass the player a view into the current tableau
             var cardName = player.buyCard(tableau);
@@ -140,9 +127,7 @@ public class GameEngine {
                 }
                 // Okeyday then, let's mechanize that purchase
                 var purchasedCard = tableau.pullCard(name).get(); // returns optional, but we know it'll be there
-                if (DO_PRINTING) {
-                    System.out.println(String.format("   %s buys a %s", player.name, purchasedCard.getNameStr()));
-                }
+                log("   %s buys a %s", player.name, purchasedCard.toString());
                 player.state.currentMoney -= purchasedCard.getCost();
                 --player.state.currentBuys;
                 player.discardPile.gain(purchasedCard);
@@ -176,7 +161,7 @@ public class GameEngine {
                 if (DO_PRINTING) {
                     for (int i = 0; i < cellarCardsToDiscard.numLeft(); ++i) {
                         System.out.println(String.format("    Discarding: %s",
-                                cellarCardsToDiscard.examine(i).getNameStr()));
+                                cellarCardsToDiscard.examine(i).toString()));
                     }
                 }
                 int numDiscarding = cellarCardsToDiscard.numLeft();
@@ -196,7 +181,7 @@ public class GameEngine {
                     }
                     if (DO_PRINTING) {
                         System.out.println(
-                                String.format("   %s trashes a %s", player.name, cardToTrash.getNameStr()));
+                                String.format("   %s trashes a %s", player.name, cardToTrash.toString()));
                     }
                     tableau.trashPile.gain(cardToTrash);
                     if (mineTrashGain.getSecond().isPresent()) {
@@ -216,12 +201,12 @@ public class GameEngine {
                         if (cost > cardToTrash.getCost() + 3) {
                             throw new IllegalStateException(String.format(
                                     "Player %d was asked to pick a card costing no more than 3 more than the card to trash (%s) but picked %s",
-                                            player.id, cardToTrash.getName(), name));
+                                    player.id, cardToTrash.getName(), name));
                         }
                         var gainedCard = tableau.pullCard(name).get(); // returns optional, but we know it'll exist
                         if (DO_PRINTING) {
                             System.out.println(
-                                    String.format("   %s buys a %s", player.name, gainedCard.getNameStr()));
+                                    String.format("   %s buys a %s", player.name, gainedCard.toString()));
                         }
                         // Better be a treasure
                         if (!gainedCard.getTypes().contains(Card.Type.TREASURE)) {
@@ -248,16 +233,13 @@ public class GameEngine {
                 player.drawToHand(card.getExtraCards());
                 // all players but this one have to draw a curse, in player order (in case we
                 // run out)
-                int nextPlayerId = player.id + 1;
-                if (nextPlayerId >= players.size()) {
-                    nextPlayerId = 0;
-                }
-                while (nextPlayerId != player.id && tableau.numLeft(Card.Name.CURSE) > 0) {
-                    // pullCard will return an Optional, but we verified it exists above so we're ok
-                    players.get(nextPlayerId).deck.gain(tableau.pullCard(Card.Name.CURSE).get());
-                    ++nextPlayerId;
-                    if (nextPlayerId >= players.size()) {
-                        nextPlayerId = 0;
+                for (var p : players){
+                    if (p == player){
+                        // This is the person playing the witch, they don't get curses
+                        continue;
+                    }
+                    if (tableau.numLeft(Card.Name.CURSE) > 0){
+                        p.deck.gain(tableau.pullCard(Card.Name.CURSE).get());
                     }
                 }
             }
@@ -285,5 +267,112 @@ public class GameEngine {
             vp += stack.draw().getExtraVP();
         }
         return vp;
+    }
+
+    private void determineWinner(List<Player> players){
+
+            List<Integer> playerScores = new ArrayList<Integer>();
+            // Figure out scores and who won
+            for (Player p : players) {
+                playerScores.add(p.state.finalVP);
+            }
+            List<Player> highScoringPlayers = new ArrayList<>();
+            int maxScore = Collections.max(playerScores);
+            for (int i = players.size() - 1; i >= 0; --i) {
+                Player p = players.get(i);
+                if (p.state.finalVP == maxScore) {
+                    highScoringPlayers.add(players.remove(i));
+                } else {
+                    // if you have less than the max score, you lose!
+                    p.state.gameResult = GameResult.LOSS;
+                }
+            }
+            if (highScoringPlayers.size() == 1) {
+                // Somebody won outright, yay!
+                // Increment number of wins for that strategy
+                highScoringPlayers.get(0).state.gameResult = GameResult.WIN;
+            } else {
+                // Look at number of turns to break tie
+                List<Integer> numTurns = new ArrayList<>();
+                for (var p : highScoringPlayers) {
+                    numTurns.add(p.state.turnsTaken);
+                }
+                // Resolve ties if we can
+                List<Player> fewestTurnPlayers = new ArrayList<>();
+                int minTurns = Collections.min(numTurns);
+                for (int i = highScoringPlayers.size() - 1; i >= 0; --i) {
+                    Player p = highScoringPlayers.get(i);
+                    if (p.state.turnsTaken == minTurns) {
+                        fewestTurnPlayers.add(highScoringPlayers.remove(i));
+                    }
+                    else {
+                        p.state.gameResult = GameResult.LOSS;
+                    }
+                }
+                if (fewestTurnPlayers.size() == 1) {
+                    // Only one player with a high score had the minimum number of turns, so he wins
+                    // outright
+                    // Increment number of wins for that strategy
+                    fewestTurnPlayers.get(0).state.gameResult = GameResult.WIN;
+                } else {
+                    // Iterate through players at max score and the appropriate number of turns, and
+                    // register ties
+                    for (var p : fewestTurnPlayers) {
+                        p.state.gameResult = GameResult.TIE;
+                    }
+                }
+            }
+    }
+
+    public void logHand(Player player)
+    {
+        if (!DO_PRINTING) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(player.name);
+        sb.append(" has ");
+        logStack(player.hand, sb);
+        sb.append(" in their hand.");
+        log(sb.toString());
+    }
+    public void logDeck(Player player)
+    {
+        if (!DO_PRINTING) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(player.name);
+        sb.append(" has ");
+        logStack(player.deck, sb);
+        sb.append(" in their deck.");
+        log(sb.toString());
+    }
+    public void logDiscard(Player player)
+    {
+        if (!DO_PRINTING) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(player.name);
+        sb.append(" has ");
+        logStack(player.discardPile, sb);
+        sb.append(" in their discard.");
+        log(sb.toString());
+    }
+
+    public void logStack(CardStack stack, StringBuilder sb)
+    {
+        for (int i = 0; i < stack.numLeft(); ++i)
+        {
+            sb.append(stack.examine(i).toString());
+            sb.append(", ");
+        }
+    }
+
+    public void log(String s, Object... args) {
+        if (DO_PRINTING) {
+            System.out.println(String.format(s, args));
+        }
     }
 }
