@@ -95,11 +95,11 @@ public class BigMoney_Plus extends BigMoney {
 
     @Override
     public Optional<Name> pickACardToBuy_6(Tableau tableau) {
-        // If we don't have a witch yet, get one
-        if (numWitchBought < 1 && numWitchToBuy > 0 && tableau.numLeft(Card.Name.WITCH) > 0) {
-            ++numWitchBought;
-            return Optional.of(Card.Name.WITCH);
-        }
+        // // If we don't have a witch yet, get one
+        // if (numWitchBought < 1 && numWitchToBuy > 0 && tableau.numLeft(Card.Name.WITCH) > 0) {
+        //     ++numWitchBought;
+        //     return Optional.of(Card.Name.WITCH);
+        // }
         return super.pickACardToBuy_6(tableau);
     }
 

@@ -47,6 +47,9 @@ public class Player {
 
     public final int id;
     public String name = "";
+    public String toString(){
+        return name;
+    }
     protected CardStack deck;
     protected CardStack hand;
 
