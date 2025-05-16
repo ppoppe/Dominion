@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.poppe.dominion.core.Card;
 import org.poppe.dominion.core.Card.Name;
+import org.poppe.dominion.core.Player;
 import org.poppe.dominion.core.Tableau;
 
 /**
@@ -18,7 +19,6 @@ public class VillageSmithy extends BigMoney {
     private int numVillagesPurchased = 0;
     private int numSilversPurchased = 0;
     public VillageSmithy(Player player, int numSmithiesDesired, int numVillagesDesired) {
-        super(player);
         name = "VillageSmithy";
         this.numSmithiesDesired = numSmithiesDesired;
         this.numVillagesDesired = numVillagesDesired;

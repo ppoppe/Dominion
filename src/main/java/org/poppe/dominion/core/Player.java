@@ -147,6 +147,7 @@ public class Player {
         this.playArea = new CardStack();
         this.discardPile = new CardStack();
         this.state = new PlayerState();
+        this.strategy.reset();
     }
 
     protected void setStrategy(Strategy strategy) {

@@ -16,6 +16,9 @@ public class BigMoney extends Strategy {
         this.name = "Big Money";
     }
 
+    public void reset() { // nothing to do here for BigMoney
+    }
+
     @Override
     public Optional<Integer> pickAnActionCard() {
         // We aren't going to own any action cards, so there's no need to ever specify

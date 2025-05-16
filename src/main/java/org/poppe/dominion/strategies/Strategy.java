@@ -23,6 +23,9 @@ public abstract class Strategy {
         this.player = player;
     }
 
+    // Will get called at the start of every game, need to reinitialize any counters/etc for a new game
+    public abstract void reset();
+
     // Decide what actions to play
     // Examine Player's hand to see what choices need to be made, then inform the game engine of your choice
     // Return an index to the card in the Players hand we want to play down
