@@ -24,17 +24,20 @@ import org.poppe.dominion.core.Tableau;
   * "extra" card BM+ is using so they will NOT be optimal in general for mix/match scenario
   */
 public class BigMoney_Plus extends BigMoney {
+    private final int numAdventurerToBuy;
     private final int numCellarToBuy;
     private final int numMineToBuy;
     private final int numSmithyToBuy;
     private final int numVillageToBuy;
     private final int numWitchToBuy;
+    private int numAdventurerBought = 0;
     private int numCellarBought = 0;
     private int numMineBought = 0;
     private int numSmithyBought = 0;
     private int numVillageBought = 0;
     private int numWitchBought = 0;
     private BigMoney_Plus(Builder b) {
+        this.numAdventurerToBuy = b.numAdventurerToBuy;
         this.numCellarToBuy = b.numCellarToBuy;
         this.numMineToBuy = b.numMineToBuy;
         this.numSmithyToBuy = b.numSmithyToBuy;
@@ -44,6 +47,7 @@ public class BigMoney_Plus extends BigMoney {
     }
 
     public void reset(){
+        numAdventurerBought = 0;
         numCellarBought = 0;
         numMineBought = 0;
         numSmithyBought = 0;
@@ -52,6 +56,7 @@ public class BigMoney_Plus extends BigMoney {
     }
 
     public static class Builder {
+        private int numAdventurerToBuy = 0;
         private int numCellarToBuy = 0;
         private int numMineToBuy = 0;
         private int numSmithyToBuy = 0;
@@ -59,31 +64,36 @@ public class BigMoney_Plus extends BigMoney {
         private int numWitchToBuy = 0;
         private StringBuilder sb = new StringBuilder();
         public Builder(){
-            this.sb.append("Big Money+");
+            this.sb.append("Big Money");
+        }
+        public Builder withAdventurers(int numToBuy){
+            this.numAdventurerToBuy = numToBuy;
+            this.sb.append("+Adventurer");
+            return this;
         }
         public Builder withCellars(int numToBuy){
             this.numCellarToBuy = numToBuy;
-            this.sb.append("Cellar");
+            this.sb.append("+Cellar");
             return this;
         }
         public Builder withMines(int numToBuy){
             this.numMineToBuy = numToBuy;
-            this.sb.append("Mine");
+            this.sb.append("+Mine");
             return this;
         }
         public Builder withSmithies(int numToBuy){
             this.numSmithyToBuy = numToBuy;
-            this.sb.append("Smithy");
+            this.sb.append("+Smithy");
             return this;
         }
         public Builder withVillages(int numToBuy){
             this.numVillageToBuy = numToBuy;
-            this.sb.append("Village");
+            this.sb.append("+Village");
             return this;
         }
         public Builder withWitches(int numToBuy){
             this.numWitchToBuy = numToBuy;
-            this.sb.append("Witch");
+            this.sb.append("+Witch");
             return this;
         }
 
@@ -107,6 +117,10 @@ public class BigMoney_Plus extends BigMoney {
         if (numWitchBought < 1 && numWitchToBuy > 0 && tableau.numLeft(Card.Name.WITCH) > 0) {
             ++numWitchBought;
             return Optional.of(Card.Name.WITCH);
+        }
+        if (numAdventurerBought < numAdventurerToBuy && tableau.numLeft(Card.Name.ADVENTURER) > 0) {
+            ++numAdventurerBought;
+            return Optional.of(Card.Name.ADVENTURER);
         }
         return super.pickACardToBuy_6(tableau);
     }

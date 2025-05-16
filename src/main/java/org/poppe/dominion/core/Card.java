@@ -20,6 +20,7 @@ public final class Card {
         PROVINCE,
         COLONY,
         CURSE,
+        ADVENTURER,
         CELLAR,
         MINE,
         SMITHY,

@@ -155,7 +155,7 @@ public class Player {
         this.name = String.format("%s_%d",strategy.name,this.id);
         this.strategy.setPlayer(this);
     }
-
+    // Draws a single card from deck to hand
     protected void drawToHand() {
         drawToHand(1);
     }
@@ -205,7 +205,7 @@ public class Player {
         }
     }
     
-    private Optional<Card> drawFromDeck() {
+    protected Optional<Card> drawFromDeck() {
         // Need a special method here to bring in discard if deck is empty
         if (deck.numLeft() < 1) {
             deck.gain(discardPile);

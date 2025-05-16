@@ -26,6 +26,8 @@ public class Dominion {
             Strategy bigMoneyWitch = new BigMoney_Plus.Builder().withWitches(2).build();
             Strategy bigMoneySmithy = new BigMoney_Plus.Builder().withSmithies(2).build();
             Strategy bigMoneyCellar = new BigMoney_Plus.Builder().withCellars(2).build();
+            Strategy bigMoneyMine = new BigMoney_Plus.Builder().withMines(1).build();
+            Strategy bigMoneyAdventurer = new BigMoney_Plus.Builder().withAdventurers(1).build();
 
             List<Player> players = new ArrayList<Player>();
             int id = 0;
@@ -33,14 +35,14 @@ public class Dominion {
             players.get(id).setStrategy(bigMoney);
             ++id;
             players.add(new Player(id));
-            players.get(id).setStrategy(bigMoneyWitch);
-            ++id;
-            players.add(new Player(id));
-            players.get(id).setStrategy(bigMoneySmithy);
-            ++id;
-            players.add(new Player(id));
-            players.get(id).setStrategy(bigMoneyCellar);
-            ++id;
+            players.get(id).setStrategy(bigMoneyAdventurer);
+            // ++id;
+            // players.add(new Player(id));
+            // players.get(id).setStrategy(bigMoneySmithy);
+            // ++id;
+            // players.add(new Player(id));
+            // players.get(id).setStrategy(bigMoneyCellar);
+            // ++id;
 
             // PlayerID, Wins/Ties
             Map<Integer, Integer> numWinsPerPlayer = new HashMap<>();

@@ -19,6 +19,7 @@ public class GameEngine {
     public GameEngine(List<Player> players) {
         // Build the tableau before we do anything else
         this.tableau = new Tableau.Builder(players.size())
+                .withCard(Card.Name.ADVENTURER)
                 .withCard(Card.Name.CELLAR)
                 .withCard(Card.Name.MINE)
                 .withCard(Card.Name.SMITHY)
@@ -154,6 +155,26 @@ public class GameEngine {
             case COPPER, SILVER, GOLD, PLATINUM -> {
                 player.state.currentMoney += card.getExtraTreasure();
             }
+            case ADVENTURER ->{
+                // While player has deck left (including shuffling in discard), draw until we get two treasures, put 
+                // them in hand, then discard everything else
+                CardStack temp = new CardStack();
+                int numTreasuresFound = 0;
+                while (player.deck.numLeft() > 0 && numTreasuresFound < 2)
+                {
+                    // can use .get() since while() above protects us from empty decks
+                    var c = player.drawFromDeck().get();
+                    if (c.getTypes().contains(Card.Type.TREASURE)){
+                        player.hand.gain(c);
+                        ++numTreasuresFound;
+                    }
+                    else{
+                        temp.gain(c);
+                    }
+                }
+                // Now that we're done, shove all the leftovers into the discard
+                player.discardPile.gain(temp);
+            }
             case CELLAR -> {
                 player.state.currentActions += card.getExtraActions();
                 // Tell the player to discard cards so they can draw more
@@ -189,11 +210,6 @@ public class GameEngine {
                         if (tableau.numLeft(name) < 1) {
                             throw new IllegalStateException(String.format(
                                     "Player %d asked to trade up to %s, but that pile is empty",
-                                    player.id, name.toString()));
-                        }
-                        if (tableau.numLeft(name) < 1) {
-                            throw new IllegalStateException(String.format(
-                                    "Player %d asked to trash a treasure %s, but that pile is empty",
                                     player.id, name.toString()));
                         }
                         // Look at a card in the pile so we can see how much it costs
@@ -324,8 +340,7 @@ public class GameEngine {
             }
     }
 
-    public void logHand(Player player)
-    {
+    public void logHand(Player player) {
         if (!DO_PRINTING) {
             return;
         }
@@ -336,8 +351,8 @@ public class GameEngine {
         sb.append(" in their hand.");
         log(sb.toString());
     }
-    public void logDeck(Player player)
-    {
+
+    public void logDeck(Player player) {
         if (!DO_PRINTING) {
             return;
         }
@@ -348,8 +363,8 @@ public class GameEngine {
         sb.append(" in their deck.");
         log(sb.toString());
     }
-    public void logDiscard(Player player)
-    {
+
+    public void logDiscard(Player player) {
         if (!DO_PRINTING) {
             return;
         }
@@ -361,10 +376,8 @@ public class GameEngine {
         log(sb.toString());
     }
 
-    public void logStack(CardStack stack, StringBuilder sb)
-    {
-        for (int i = 0; i < stack.numLeft(); ++i)
-        {
+    public void logStack(CardStack stack, StringBuilder sb) {
+        for (int i = 0; i < stack.numLeft(); ++i) {
             sb.append(stack.examine(i).toString());
             sb.append(", ");
         }
